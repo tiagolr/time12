@@ -849,9 +849,10 @@ void TIME12AudioProcessor::processBlockByType (AudioBuffer<FloatType>& buffer, j
         return msg.offset < 0;
     }), midiIn.end());
 
-    // update outputs with last block information at the start of the new block
+    // update outputs with last envelope value at the start of the block
     if (outputCC > 0) {
-        auto val = (int)std::round(ypos*127.0);
+        auto envval = trigger == Trigger::Audio ? ypos : latypos[readpos];
+        auto val = (int)std::round(envval*127.0);
         if (bipolarCC) val -= 64;
         auto cc = MidiMessage::controllerEvent(outputCCChan + 1, outputCC-1, val);
         midiMessages.addEvent(cc, 0);
@@ -1060,7 +1061,6 @@ void TIME12AudioProcessor::processBlockByType (AudioBuffer<FloatType>& buffer, j
 
             auto viewpos = (alwaysPlaying || audioTrigger)
                 ? xpos : (trigpos + trigphase) - std::floor(trigpos + trigphase);
-
             processDisplaySample(viewpos, ypos, lsample, rsample);
 
             if (audioTriggerCountdown > -1)
@@ -1069,7 +1069,8 @@ void TIME12AudioProcessor::processBlockByType (AudioBuffer<FloatType>& buffer, j
 
         latxpos[writepos] = xpos;
         latypos[writepos] = ypos;
-        if (trigger == Trigger::Audio) {
+
+        if (trigger == Trigger::Audio) { // audio trigger delays envelopes already, no need to apply latency
             xenv.store(xpos);
             yenv.store(ypos);
         }

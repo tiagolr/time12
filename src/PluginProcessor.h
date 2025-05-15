@@ -34,6 +34,13 @@ struct MidiOutMsg {
     int offset;
 };
 
+enum ANoise {
+    ANOff,
+    ANLow,
+    ANMedium,
+    ANHigh,
+};
+
 enum Trigger {
     Sync,
     MIDI,
@@ -143,14 +150,23 @@ public:
     RCSmoother* value; // smooths envelope value
     bool showLatencyWarning = false;
 
+    // Latency state
+    int latency = 0; // samples
+    int writepos = 0;
+    int readpos = 0;
+    double latencyBeats = 0.0;
+    ANoise lanoise = ANoise::ANOff; // last anti noise setting
+    std::vector<double> latxpos = std::vector<double>(44100, 0.0); // delayed envelope xpos
+    std::vector<double> latypos = std::vector<double>(44100, 0.0); // delayed envelope ypos
+    std::vector<double> latviewpos = std::vector<double>(44100, 0.0); // delayed viewpos 
+    std::vector<double> latBufferL = std::vector<double>(44100, 0.0); // latency buffer left
+    std::vector<double> latBufferR = std::vector<double>(44100, 0.0); // latency buffer right
+
     // Audio mode state
     bool audioTrigger = false; // flag audio has triggered envelope
     int audioTriggerCountdown = -1; // samples until audio envelope starts
-    std::vector<double> latBufferL; // latency buffer left
-    std::vector<double> latBufferR; // latency buffer right
-    std::vector<double> latMonitorBufferL; // latency buffer left
-    std::vector<double> latMonitorBufferR; // latency buffer right
-    int latpos = 0; // latency buffer pos
+    std::vector<double> latMonitorBufferL = std::vector<double>(44100, 0.0); // latency monitor buffer left
+    std::vector<double> latMonitorBufferR = std::vector<double>(44100, 0.0); // latency monitor buffer right
     Filter lpFilterL{};
     Filter lpFilterR{};
     Filter hpFilterL{};
@@ -189,6 +205,7 @@ public:
     TIME12AudioProcessor();
     ~TIME12AudioProcessor() override;
 
+    void updateLatency(double sampleRate);
     void loadSettings();
     void saveSettings();
     void setScale(float value);

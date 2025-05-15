@@ -2,9 +2,9 @@
 
 namespace globals {
 	inline unsigned int COLOR_BG = 0xff181818;
-	inline unsigned int COLOR_ACTIVE = 0xff00ff80;
-	inline unsigned int COLOR_ACTIVE_LIGHT = 0xff82ffc1;
-	inline unsigned int COLOR_ACTIVE_DARK = 0xff006633;
+	inline unsigned int COLOR_ACTIVE = 0xff00e672;
+	inline unsigned int COLOR_ACTIVE_LIGHT = 0xff75e6b5;
+	inline unsigned int COLOR_ACTIVE_DARK = 0xff005f2f;
 	inline unsigned int COLOR_NEUTRAL = 0xff666666;
 	inline unsigned int COLOR_NEUTRAL_LIGHT = 0x99999999;
 	inline unsigned int COLOR_SEEK = 0xff00ff00;
@@ -19,13 +19,20 @@ namespace globals {
 	inline unsigned int COLOR_SEQ_TENA = 0xffffee50;
 	inline unsigned int COLOR_SEQ_TENR = 0xffffB950;
 
-	inline const int LATENCY_MILLIS = 5;
+	// Anti noise
+	inline const int ANOISE_LAT_OFF = 0;
+	inline const int ANOISE_LAT_LOW = 2;
+	inline const int ANOISE_LAT_MED = 500;
+	inline const int ANOISE_LAT_HIGH = 5;
+
+	// Audio trigger
+	inline const int AUDIO_LATENCY_MILLIS = 5;
 	inline const int AUDIO_COOLDOWN_MILLIS = 50;
 	inline const int AUDIO_DRUMSBUF_MILLIS = 20;
 	inline const int AUDIO_NOTE_LENGTH_MILLIS = 100; 
 	inline const int MAX_UNDO = 100;
 
-	// view consts
+	// view
 	inline const int PLUG_WIDTH = 640;
 	inline const int PLUG_HEIGHT = 650;
 	inline const int MAX_PLUG_WIDTH = 640 * 3;

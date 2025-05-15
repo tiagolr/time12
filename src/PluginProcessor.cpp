@@ -13,8 +13,8 @@ TIME12AudioProcessor::TIME12AudioProcessor()
      )
     , settings{}
     , params(*this, &undoManager, "PARAMETERS", {
-        std::make_unique<juce::AudioParameterFloat>("mix", "Mix", 0.0f, 1.0f, 1.0f),
         std::make_unique<juce::AudioParameterInt>("pattern", "Pattern", 1, 12, 1),
+        std::make_unique<juce::AudioParameterFloat>("mix", "Mix", 0.0f, 1.0f, 1.0f),
         std::make_unique<juce::AudioParameterChoice>("patsync", "Pattern Sync", StringArray { "Off", "1/4 Beat", "1/2 Beat", "1 Beat", "2 Beats", "4 Beats"}, 0),
         std::make_unique<juce::AudioParameterChoice>("trigger", "Trigger", StringArray { "Sync", "MIDI", "Audio" }, 0),
         std::make_unique<juce::AudioParameterChoice>("sync", "Sync", StringArray { "Rate Hz", "1/16", "1/8", "1/4", "1/2", "1/1", "2/1", "4/1", "1/16t", "1/8t", "1/4t", "1/2t", "1/1t", "1/16.", "1/8.", "1/4.", "1/2.", "1/1." }, 5),
@@ -30,6 +30,7 @@ TIME12AudioProcessor::TIME12AudioProcessor()
         std::make_unique<juce::AudioParameterFloat>("tensionrel", "Release Tension", -1.0f, 1.0f, 0.0f),
         std::make_unique<juce::AudioParameterBool>("snap", "Snap", false),
         std::make_unique<juce::AudioParameterInt>("grid", "Grid", 0, (int)std::size(GRID_SIZES)-1, 2),
+        std::make_unique<juce::AudioParameterChoice>("anoise", "Anti-Noise", StringArray { "Off", "Low", "Medium", "High"}, 2),
         // audio trigger params
         std::make_unique<juce::AudioParameterChoice>("algo", "Audio Algorithm", StringArray { "Simple", "Drums" }, 0),
         std::make_unique<juce::AudioParameterFloat>("threshold", "Audio Threshold", NormalisableRange<float>(0.0f, 1.0f), 0.5f),
@@ -406,19 +407,27 @@ void TIME12AudioProcessor::changeProgramName (int index, const juce::String& new
 void TIME12AudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
     (void)samplesPerBlock;
-    int trigger = (int)params.getRawParameterValue("trigger")->load();
-    setLatencySamples(trigger == Trigger::Audio 
-        ? static_cast<int>(sampleRate * LATENCY_MILLIS / 1000.0) 
-        : 0
-    );
+    updateLatency(sampleRate);
     lpFilterL.clear(0.0);
     lpFilterR.clear(0.0);
     hpFilterL.clear(0.0);
     hpFilterR.clear(0.0);
     transDetectorL.clear(sampleRate);
     transDetectorR.clear(sampleRate);
-    std::fill(monSamples.begin(), monSamples.end(), 0.0);
     onSlider();
+}
+
+void TIME12AudioProcessor::updateLatency(double sampleRate)
+{
+    int trigger = (int)params.getRawParameterValue("trigger")->load();
+    ANoise anoise = (ANoise)params.getRawParameterValue("anoise")->load();
+    int audioMillis = trigger == Trigger::Audio ? AUDIO_LATENCY_MILLIS : 0;
+    int anoiseMillis = anoise == ANOff 
+        ? ANOISE_LAT_OFF : anoise == ANLow ? ANOISE_LAT_LOW
+        : anoise == ANMedium? ANOISE_LAT_MED : ANOISE_LAT_HIGH;
+
+    setLatencySamples((int)(std::max(anoiseMillis, audioMillis) / 1000.0 * sampleRate));
+    clearLatencyBuffers();
 }
 
 void TIME12AudioProcessor::releaseResources()
@@ -459,18 +468,11 @@ void TIME12AudioProcessor::onSlider()
     auto srate = getSampleRate();
 
     int trigger = (int)params.getRawParameterValue("trigger")->load();
-    if (trigger != ltrigger) {
-        auto latency = getLatencySamples();
-        setLatencySamples(trigger == Trigger::Audio 
-            ? static_cast<int>(getSampleRate() * LATENCY_MILLIS / 1000.0) 
-            : 0
-        );
-        if (getLatencySamples() != latency && playing) {
-            showLatencyWarning = true;
-            MessageManager::callAsync([this]() { sendChangeMessage(); });
-        }
-        clearLatencyBuffers();
+    ANoise anoise = (ANoise)params.getRawParameterValue("anoise")->load();
+    if (trigger != ltrigger || anoise != lanoise) {
+        updateLatency(srate);
         ltrigger = trigger;
+        lanoise = anoise;
     }
     if (trigger == Trigger::Sync && alwaysPlaying) 
         alwaysPlaying = false; // force alwaysPlaying off when trigger is not MIDI or Audio
@@ -596,16 +598,20 @@ void TIME12AudioProcessor::clearDrawBuffers()
 {
     std::fill(preSamples.begin(), preSamples.end(), 0.0);
     std::fill(postSamples.begin(), postSamples.end(), 0.0);
+    std::fill(latviewpos.begin(), latviewpos.end(), 0.0);
 }
 
 void TIME12AudioProcessor::clearLatencyBuffers()
 {
-    auto latency = getLatencySamples();
-    latBufferL.resize(latency, 0.0);
-    latBufferR.resize(latency, 0.0);
-    latMonitorBufferL.resize(latency, 0.0);
-    latMonitorBufferR.resize(latency, 0.0);
-    latpos = 0;
+    latency = getLatencySamples();
+    std::fill(latBufferL.begin(), latBufferL.end(), 0.0);
+    std::fill(latBufferR.begin(), latBufferR.end(), 0.0);
+    std::fill(latMonitorBufferL.begin(), latMonitorBufferL.end(), 0.0);
+    std::fill(latMonitorBufferR.begin(), latMonitorBufferR.end(), 0.0);
+    std::fill(monSamples.begin(), monSamples.end(), 0.0);
+    std::fill(latxpos.begin(), latxpos.end(), 0.0);
+    std::fill(latypos.begin(), latypos.end(), 0.0);
+    writepos = 0;
 }
 
 void TIME12AudioProcessor::toggleUseSidechain()
@@ -696,6 +702,8 @@ void TIME12AudioProcessor::processBlockByType (AudioBuffer<FloatType>& buffer, j
     bool looping = false;
     double loopStart = 0.0;
     double loopEnd = 0.0;
+    latency = getLatencySamples();
+    DBG(latency);
 
     // Get playhead info
     if (auto* phead = getPlayHead()) {
@@ -707,6 +715,7 @@ void TIME12AudioProcessor::processBlockByType (AudioBuffer<FloatType>& buffer, j
                 beatsPerSample = *tempo / (60.0 * srate);
                 samplesPerBeat = (int)((60.0 / *tempo) * srate);
                 secondsPerBeat = 60.0 / *tempo;
+                latencyBeats = (latency / srate) * *tempo / 60.0;
             }
             looping = pos->getIsLooping();
             if (auto loopPoints = pos->getLoopPoints()) {
@@ -899,6 +908,13 @@ void TIME12AudioProcessor::processBlockByType (AudioBuffer<FloatType>& buffer, j
             }
         }
 
+        // process latency buffers
+        latBufferL[writepos] = (double)buffer.getSample(0, sample);
+        latBufferR[writepos] = (double)buffer.getSample(audioInputs > 1 ? 1 : 0, sample);
+        readpos = latency == 0 ? latency : (writepos + latency - 1) % latency;
+        double lsample = latBufferL[readpos]; // delayed sample
+        double rsample = latBufferR[readpos]; // delayed sample
+
         // Sync mode
         if (trigger == Trigger::Sync) {
             xpos = sync > 0 
@@ -909,10 +925,8 @@ void TIME12AudioProcessor::processBlockByType (AudioBuffer<FloatType>& buffer, j
             double newypos = getY(xpos, min, max);
             ypos = value->process(newypos, newypos > ypos);
             
-            auto lsample = (double)buffer.getSample(0, sample);
-            auto rsample = (double)buffer.getSample(1 % audioInputs, sample);
-            applyGain(sample, ypos, lsample, rsample);
-            processDisplaySample(xpos, ypos, lsample, rsample);
+            applyGain(sample, latypos[readpos], lsample, rsample);
+            processDisplaySample(latxpos[readpos], latypos[readpos], lsample, rsample);
         }
 
         // MIDI mode
@@ -939,34 +953,25 @@ void TIME12AudioProcessor::processBlockByType (AudioBuffer<FloatType>& buffer, j
             double newypos = getY(xpos, min, max);
             ypos = value->process(newypos, newypos > ypos);    
 
-            auto lsample = (double)buffer.getSample(0, sample);
-            auto rsample = (double)buffer.getSample(1 % audioInputs, sample);
-            applyGain(sample, ypos, lsample, rsample);
-            double viewx = (alwaysPlaying || midiTrigger) ? xpos : (trigpos + trigphase) - std::floor(trigpos + trigphase);
-            processDisplaySample(viewx, ypos, lsample, rsample);
+            applyGain(sample, latypos[readpos], lsample, rsample);
+            latviewpos[writepos] = (alwaysPlaying || midiTrigger) 
+                ? xpos : (trigpos + trigphase) - std::floor(trigpos + trigphase);
+            processDisplaySample(latviewpos[readpos], latypos[readpos], lsample, rsample);
         }
 
         // Audio mode
         else if (trigger == Trigger::Audio) {
-            int latency = (int)latBufferL.size();
-            
-            // read audio samples
-            double lsample = (double)buffer.getSample(0, sample);
-            double rsample = (double)buffer.getSample(audioInputs > 1 ? 1 : 0, sample);
-            latBufferL[latpos] = lsample;
-            latBufferR[latpos] = rsample;
-
             // read sidechain samples
-            double lsidesample = 0.0;
-            double rsidesample = 0.0;
+            double lrawsample = (double)buffer.getSample(0, sample);
+            double rrawsample = (double)buffer.getSample(audioInputs > 1 ? 1 : 0, sample);
             if (useSidechain && sideInputs) {
-                lsidesample = (double)buffer.getSample(audioInputs, sample);
-                rsidesample = (double)buffer.getSample(sideInputs > 1 ? audioInputs + 1 : audioInputs, sample);
+                lrawsample = (double)buffer.getSample(audioInputs, sample);
+                rrawsample = (double)buffer.getSample(sideInputs > 1 ? audioInputs + 1 : audioInputs, sample);
             }
 
             // Detect audio transients
-            auto monSampleL = useSidechain ? lsidesample : lsample;
-            auto monSampleR = useSidechain ? rsidesample : rsample;
+            auto monSampleL = lrawsample;
+            auto monSampleR = rrawsample;
             if (lowcut > 20.0) {
                 monSampleL = hpFilterL.df1(monSampleL);
                 monSampleR = hpFilterR.df1(monSampleR);
@@ -975,30 +980,22 @@ void TIME12AudioProcessor::processBlockByType (AudioBuffer<FloatType>& buffer, j
                 monSampleL = lpFilterL.df1(monSampleL);
                 monSampleR = lpFilterR.df1(monSampleR);
             }
-            latMonitorBufferL[latpos] = monSampleL;
-            latMonitorBufferR[latpos] = monSampleR;
+            latMonitorBufferL[writepos] = monSampleL;
+            latMonitorBufferR[writepos] = monSampleR;
 
             if (transDetectorL.detect(algo, monSampleL, threshold, sense) || 
                 transDetectorR.detect(algo, monSampleR, threshold, sense)) 
             {
                 transDetectorL.startCooldown();
                 transDetectorR.startCooldown();
-                int offset = (int)(params.getRawParameterValue("offset")->load() * LATENCY_MILLIS / 1000.f * srate);
+                int offset = (int)(params.getRawParameterValue("offset")->load() * AUDIO_LATENCY_MILLIS / 1000.f * srate);
                 audioTriggerCountdown = std::max(0, getLatencySamples() + offset);
                 hitamp = transDetectorL.hit ? std::fabs(monSampleL) : std::fabs(monSampleR);
             }
 
-            // read the sample 'latency' samples ago
-            int readPos = (latpos + latency - 1) % latency;
-            lsample = latBufferL[readPos];
-            rsample = latBufferR[readPos];
-            monSampleL = latMonitorBufferL[readPos];
-            monSampleR = latMonitorBufferR[readPos];
-
-            // write delayed samples to buffer to later apply dry/wet mix
-            for (int channel = 0; channel < audioOutputs; ++channel) {
-                buffer.setSample(channel, sample, static_cast<FloatType>(channel == 0 ? lsample : rsample));
-            }
+            // read the monitor sample 'latency' samples ago
+            monSampleL = latMonitorBufferL[readpos];
+            monSampleR = latMonitorBufferR[readpos];
             
             auto hit = audioTriggerCountdown == 0; // there was an audio transient trigger in this sample
             processMonitorSample(monSampleL, monSampleR, hit);
@@ -1060,25 +1057,28 @@ void TIME12AudioProcessor::processBlockByType (AudioBuffer<FloatType>& buffer, j
                 }
             }
             else {
-                applyGain(sample, ypos, lsample, rsample);
+                applyGain(sample, latypos[readpos], lsample, rsample);
             }
 
-            double viewx = (alwaysPlaying || audioTrigger) ? xpos : (trigpos + trigphase) - std::floor(trigpos + trigphase);
-            processDisplaySample(viewx, ypos, lsample, rsample);
-            latpos = (latpos + 1) % latency;
+            latviewpos[writepos] = (alwaysPlaying || audioTrigger) 
+                ? xpos : (trigpos + trigphase) - std::floor(trigpos + trigphase);
+
+            processDisplaySample(latviewpos[readpos], latypos[readpos], lsample, rsample);
 
             if (audioTriggerCountdown > -1)
                 audioTriggerCountdown -= 1;
         }
 
-        xenv.store(xpos);
-        yenv.store(ypos);
+        latxpos[writepos] = xpos;
+        latypos[writepos] = ypos;
+        xenv.store(latxpos[readpos]);
+        yenv.store(latypos[readpos]);
         beatPos += beatsPerSample;
         ratePos += 1 / srate * ratehz;
+        writepos = latency == 0 ? 0 : (writepos + 1) % latency;
         if (playing)
             timeInSamples += 1;
     }
-
     drawSeek.store(playing && (trigger == Trigger::Sync || midiTrigger || audioTrigger));
 }
 

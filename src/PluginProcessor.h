@@ -154,7 +154,6 @@ public:
     int latency = 0; // samples
     int writepos = 0;
     int readpos = 0;
-    double latencyBeats = 0.0;
     ANoise lanoise = ANoise::ANOff; // last anti noise setting
     std::vector<double> latxpos = std::vector<double>(44100, 0.0); // delayed envelope xpos
     std::vector<double> latypos = std::vector<double>(44100, 0.0); // delayed envelope ypos

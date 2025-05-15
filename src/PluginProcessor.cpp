@@ -712,7 +712,6 @@ void TIME12AudioProcessor::processBlockByType (AudioBuffer<FloatType>& buffer, j
                 beatsPerSample = *tempo / (60.0 * srate);
                 samplesPerBeat = (int)((60.0 / *tempo) * srate);
                 secondsPerBeat = 60.0 / *tempo;
-                latencyBeats = (latency / srate) * *tempo / 60.0;
             }
             if (auto ppq = pos->getPpqPosition()) {
                 ppqPosition = *ppq;
@@ -989,15 +988,14 @@ void TIME12AudioProcessor::processBlockByType (AudioBuffer<FloatType>& buffer, j
                 transDetectorL.startCooldown();
                 transDetectorR.startCooldown();
                 int offset = (int)(params.getRawParameterValue("offset")->load() * AUDIO_LATENCY_MILLIS / 1000.f * srate);
-                audioTriggerCountdown = std::max(0, getLatencySamples() + offset);
+                audioTriggerCountdown = std::max(0, latency + offset);
                 hitamp = transDetectorL.hit ? std::fabs(monSampleL) : std::fabs(monSampleR);
             }
+            auto hit = audioTriggerCountdown == 0; // there was an audio transient trigger in this sample
 
             // read the monitor sample 'latency' samples ago
             monSampleL = latMonitorBufferL[readpos];
             monSampleR = latMonitorBufferR[readpos];
-            
-            auto hit = audioTriggerCountdown == 0; // there was an audio transient trigger in this sample
             processMonitorSample(monSampleL, monSampleR, hit);
            
             // envelope processing
@@ -1057,13 +1055,13 @@ void TIME12AudioProcessor::processBlockByType (AudioBuffer<FloatType>& buffer, j
                 }
             }
             else {
-                applyGain(sample, latypos[readpos], lsample, rsample);
+                applyGain(sample, ypos, lsample, rsample);
             }
 
-            latviewpos[writepos] = (alwaysPlaying || audioTrigger) 
+            auto viewpos = (alwaysPlaying || audioTrigger)
                 ? xpos : (trigpos + trigphase) - std::floor(trigpos + trigphase);
 
-            processDisplaySample(latviewpos[readpos], latypos[readpos], lsample, rsample);
+            processDisplaySample(viewpos, ypos, lsample, rsample);
 
             if (audioTriggerCountdown > -1)
                 audioTriggerCountdown -= 1;
@@ -1071,8 +1069,14 @@ void TIME12AudioProcessor::processBlockByType (AudioBuffer<FloatType>& buffer, j
 
         latxpos[writepos] = xpos;
         latypos[writepos] = ypos;
-        xenv.store(latxpos[readpos]);
-        yenv.store(latypos[readpos]);
+        if (trigger == Trigger::Audio) {
+            xenv.store(xpos);
+            yenv.store(ypos);
+        }
+        else {
+            xenv.store(latxpos[readpos]);
+            yenv.store(latypos[readpos]);
+        }
         beatPos += beatsPerSample;
         ratePos += 1 / srate * ratehz;
         writepos = latency == 0 ? 0 : (writepos + 1) % latency;

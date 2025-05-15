@@ -831,7 +831,7 @@ void TIME12AudioProcessor::processBlockByType (AudioBuffer<FloatType>& buffer, j
         }
 
         // when y value jumps activate cross fade / anti-click
-        if (std::fabs(ypos - lypos) > 0.001) {
+        if (std::fabs(ypos - lypos) > 1e-3) {
             xfade = ansamps;
             xfadepos = 1 + lypos * delayL.size;
         }

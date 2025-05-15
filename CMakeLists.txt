@@ -35,7 +35,7 @@ juce_add_plugin(${PROJECT_NAME}
         JUCE_VST3_CAN_REPLACE_VST2 FALSE
         COPY_PLUGIN_AFTER_BUILD TRUE
         PLUGIN_MANUFACTURER_CODE Tilr
-        PLUGIN_CODE gt12
+        PLUGIN_CODE tm12
         FORMATS ${plugin_formats}
         PRODUCT_NAME "TIME-12"
         BUNDLE_ID "com.tilr.time12"

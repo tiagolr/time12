@@ -703,19 +703,19 @@ void TIME12AudioProcessor::processBlockByType (AudioBuffer<FloatType>& buffer, j
     double loopStart = 0.0;
     double loopEnd = 0.0;
     latency = getLatencySamples();
-    DBG(latency);
 
     // Get playhead info
     if (auto* phead = getPlayHead()) {
         if (auto pos = phead->getPosition()) {
-            if (auto ppq = pos->getPpqPosition()) 
-                ppqPosition = *ppq;
             if (auto tempo = pos->getBpm()) {
                 beatsPerSecond = *tempo / 60.0;
                 beatsPerSample = *tempo / (60.0 * srate);
                 samplesPerBeat = (int)((60.0 / *tempo) * srate);
                 secondsPerBeat = 60.0 / *tempo;
                 latencyBeats = (latency / srate) * *tempo / 60.0;
+            }
+            if (auto ppq = pos->getPpqPosition()) {
+                ppqPosition = *ppq;
             }
             looping = pos->getIsLooping();
             if (auto loopPoints = pos->getLoopPoints()) {
@@ -911,7 +911,7 @@ void TIME12AudioProcessor::processBlockByType (AudioBuffer<FloatType>& buffer, j
         // process latency buffers
         latBufferL[writepos] = (double)buffer.getSample(0, sample);
         latBufferR[writepos] = (double)buffer.getSample(audioInputs > 1 ? 1 : 0, sample);
-        readpos = latency == 0 ? latency : (writepos + latency - 1) % latency;
+        readpos = latency == 0 ? latency : (writepos + 1) % latency;
         double lsample = latBufferL[readpos]; // delayed sample
         double rsample = latBufferR[readpos]; // delayed sample
 

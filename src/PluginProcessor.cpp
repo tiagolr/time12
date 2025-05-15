@@ -18,7 +18,7 @@ TIME12AudioProcessor::TIME12AudioProcessor()
         std::make_unique<juce::AudioParameterChoice>("patsync", "Pattern Sync", StringArray { "Off", "1/4 Beat", "1/2 Beat", "1 Beat", "2 Beats", "4 Beats"}, 0),
         std::make_unique<juce::AudioParameterChoice>("trigger", "Trigger", StringArray { "Sync", "MIDI", "Audio" }, 0),
         std::make_unique<juce::AudioParameterChoice>("sync", "Sync", StringArray { "Rate Hz", "1/16", "1/8", "1/4", "1/2", "1/1", "2/1", "4/1", "1/16t", "1/8t", "1/4t", "1/2t", "1/1t", "1/16.", "1/8.", "1/4.", "1/2.", "1/1." }, 5),
-        std::make_unique<juce::AudioParameterFloat>("rate", "Rate Hz", juce::NormalisableRange<float>(0.01f, 5000.0f, 0.01f, 0.2f), 1.0f),
+        std::make_unique<juce::AudioParameterFloat>("rate", "Rate Hz", juce::NormalisableRange<float>(0.1f, 5000.0f, 0.01f, 0.2f), 1.0f),
         std::make_unique<juce::AudioParameterFloat>("phase", "Phase", juce::NormalisableRange<float> (0.0f, 1.0f), 0.0f),
         std::make_unique<juce::AudioParameterFloat>("min", "Min", 0.0f, 1.0f, 0.0f),
         std::make_unique<juce::AudioParameterFloat>("max", "Max", 0.0f, 1.0f, 1.0f),
@@ -161,6 +161,23 @@ void TIME12AudioProcessor::setScale(float s)
 {
     scale = s;
     saveSettings();
+}
+
+void TIME12AudioProcessor::resizeDelays(double srate)
+{
+    auto sync = (int)params.getRawParameterValue("sync")->load();
+    const int size = sync == 0 
+        ? (int)(srate * 10)
+        : (int)(syncQN * srate * 60 / tempo);
+
+    delayL.resize(size);
+    delayR.resize(size);
+
+    if (sync == 0) {
+        auto ratehz = (double)params.getRawParameterValue("rate")->load();
+        delayL.setSize((int)(srate / ratehz));
+        delayR.setSize((int)(srate / ratehz));
+    }
 }
 
 int TIME12AudioProcessor::getCurrentGrid()
@@ -414,6 +431,7 @@ void TIME12AudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock
     hpFilterR.clear(0.0);
     transDetectorL.clear(sampleRate);
     transDetectorR.clear(sampleRate);
+    resizeDelays(sampleRate);
     onSlider();
 }
 
@@ -517,6 +535,15 @@ void TIME12AudioProcessor::onSlider()
     else if (sync == 15) syncQN = 1./1.*1.5; // 1/4.
     else if (sync == 16) syncQN = 2./1.*1.5; // 1/2.
     else if (sync == 17) syncQN = 4./1.*1.5; // 1/1.
+    if (sync != lsync)
+        resizeDelays(srate);
+    lsync = sync;
+
+    if (sync == 0) {
+        double ratehz = (double)params.getRawParameterValue("rate")->load();
+        delayL.setSize((int)(srate / ratehz));
+        delayR.setSize((int)(srate / ratehz));
+    }
 
     auto highcut = (double)params.getRawParameterValue("highcut")->load();
     auto lowcut = (double)params.getRawParameterValue("lowcut")->load();
@@ -543,6 +570,8 @@ void TIME12AudioProcessor::onPlay()
 {
     clearDrawBuffers();
     clearLatencyBuffers();
+    delayL.clear();
+    delayR.clear();
     int trigger = (int)params.getRawParameterValue("trigger")->load();
     double ratehz = (double)params.getRawParameterValue("rate")->load();
     double phase = (double)params.getRawParameterValue("phase")->load();
@@ -634,7 +663,7 @@ void TIME12AudioProcessor::toggleMonitorSidechain()
 
 double inline TIME12AudioProcessor::getY(double x, double min, double max)
 {
-    return min + (max - min) * (1 - pattern->get_y_at(x));
+    return min + (max - min) * pattern->get_y_at(x);
 }
 
 void TIME12AudioProcessor::setSmooth() 
@@ -707,11 +736,20 @@ void TIME12AudioProcessor::processBlockByType (AudioBuffer<FloatType>& buffer, j
     // Get playhead info
     if (auto* phead = getPlayHead()) {
         if (auto pos = phead->getPosition()) {
-            if (auto tempo = pos->getBpm()) {
-                beatsPerSecond = *tempo / 60.0;
-                beatsPerSample = *tempo / (60.0 * srate);
-                samplesPerBeat = (int)((60.0 / *tempo) * srate);
-                secondsPerBeat = 60.0 / *tempo;
+            if (auto tempo_ = pos->getBpm()) {
+                beatsPerSecond = *tempo_ / 60.0;
+                beatsPerSample = *tempo_ / (60.0 * srate);
+                samplesPerBeat = (int)((60.0 / *tempo_) * srate);
+                secondsPerBeat = 60.0 / *tempo_;
+                tempo = *tempo_;
+
+                if (ltempo != -1.0 && ltempo != tempo) { 
+                    delayL.reserve((int)srate * 5); // tempo is changing, allocate memory so resizes become cheap
+                    delayR.reserve((int)srate * 5);
+                    resizeDelays(srate);
+                }
+
+                ltempo = tempo;
             }
             if (auto ppq = pos->getPpqPosition()) {
                 ppqPosition = *ppq;
@@ -760,9 +798,11 @@ void TIME12AudioProcessor::processBlockByType (AudioBuffer<FloatType>& buffer, j
     int numSamples = buffer.getNumSamples();
 
     // processes draw wave samples
-    auto processDisplaySample = [&](double pos, double env, double lsamp, double rsamp) {
-        auto preamp = std::max(std::fabs(lsamp), std::fabs(rsamp));
-        auto postamp = preamp * env;
+    auto processDisplaySample = [&](int sampidx, double pos, double prelsamp, double prersamp) {
+        auto preamp = std::max(std::fabs(prelsamp), std::fabs(prersamp));
+        auto postlsamp = (double)buffer.getSample(0, sampidx);
+        auto postrsamp = audioOutputs > 1 ? (double)buffer.getSample(0, sampidx) : postlsamp;
+        auto postamp = std::max(std::fabs(postlsamp), std::fabs(postrsamp));
         winpos = (int)std::floor(pos * viewW);
         if (lwinpos != winpos) {
             preSamples[winpos] = 0.0;
@@ -773,6 +813,47 @@ void TIME12AudioProcessor::processBlockByType (AudioBuffer<FloatType>& buffer, j
             preSamples[winpos] = preamp;
         if (postSamples[winpos] < postamp)
             postSamples[winpos] = postamp;
+    };
+
+    auto processEnv = [&](int sampidx, double env, double lsamp, double rsamp) {
+        delayL.write(lsamp);
+        delayR.write(rsamp);
+        double outL, outR;
+
+        if (lypos == ypos) {
+            outL = delayL.read(1 + ypos * delayL.size);
+            outR = delayR.read(1 + ypos * delayR.size);
+        }
+        else {
+            // interpolate delay only when ypos is changing
+            outL = delayL.read3(1 + ypos * delayL.size);
+            outR = delayR.read3(1 + ypos * delayR.size);
+        }
+
+        // when y value jumps activate cross fade / anti-click
+        if (std::fabs(ypos - lypos) > 0.001) {
+            xfade = ansamps;
+            xfadepos = 1 + lypos * delayL.size;
+        }
+
+        // anti-noise cross fade
+        // fades in new signal fades out old signal
+        if (xfade > 0) {
+            outL = outL * (ansamps - xfade) / ansamps + delayL.read3(xfadepos + ansamps - xfade) * xfade / ansamps;
+            outR = outR * (ansamps - xfade) / ansamps + delayR.read3(xfadepos + ansamps - xfade) * xfade / ansamps;
+            xfade -= 1;
+        }
+
+        for (int channel = 0; channel < audioOutputs; ++channel) {
+            auto wet = channel == 0 ? outL : outR;
+            auto dry = (double)buffer.getSample(channel, sampidx);
+            if (outputCV)
+                buffer.setSample(channel, sampidx, static_cast<FloatType>(env));
+            else
+                buffer.setSample(channel, sampidx, static_cast<FloatType>(wet * mix + dry * (1.0 - mix)));
+        }
+
+        lypos = ypos;
     };
 
     double monIncrementPerSample = 1.0 / ((srate * 2) / monW); // 2 seconds of audio displayed on monitor
@@ -925,8 +1006,9 @@ void TIME12AudioProcessor::processBlockByType (AudioBuffer<FloatType>& buffer, j
             double newypos = getY(xpos, min, max);
             ypos = value->process(newypos, newypos > ypos);
             
-            applyGain(sample, latypos[readpos], lsample, rsample);
-            processDisplaySample(latxpos[readpos], latypos[readpos], lsample, rsample);
+            //ouble env, int sampidx, double lsamp, double rsamp
+            processEnv(sample, latypos[readpos], lsample, rsample);
+            processDisplaySample(sample, latxpos[readpos], lsample, rsample);
         }
 
         // MIDI mode
@@ -956,7 +1038,7 @@ void TIME12AudioProcessor::processBlockByType (AudioBuffer<FloatType>& buffer, j
             applyGain(sample, latypos[readpos], lsample, rsample);
             latviewpos[writepos] = (alwaysPlaying || midiTrigger) 
                 ? xpos : (trigpos + trigphase) - std::floor(trigpos + trigphase);
-            processDisplaySample(latviewpos[readpos], latypos[readpos], lsample, rsample);
+            //processDisplaySample(latviewpos[readpos], latypos[readpos], lsample, rsample);
         }
 
         // Audio mode
@@ -1059,9 +1141,9 @@ void TIME12AudioProcessor::processBlockByType (AudioBuffer<FloatType>& buffer, j
                 applyGain(sample, ypos, lsample, rsample);
             }
 
-            auto viewpos = (alwaysPlaying || audioTrigger)
-                ? xpos : (trigpos + trigphase) - std::floor(trigpos + trigphase);
-            processDisplaySample(viewpos, ypos, lsample, rsample);
+            //auto viewpos = (alwaysPlaying || audioTrigger)
+            //    ? xpos : (trigpos + trigphase) - std::floor(trigpos + trigphase);
+            //processDisplaySample(viewpos, ypos, lsample, rsample);
 
             if (audioTriggerCountdown > -1)
                 audioTriggerCountdown -= 1;
@@ -1072,11 +1154,11 @@ void TIME12AudioProcessor::processBlockByType (AudioBuffer<FloatType>& buffer, j
 
         if (trigger == Trigger::Audio) { // audio trigger delays envelopes already, no need to apply latency
             xenv.store(xpos);
-            yenv.store(ypos);
+            yenv.store(1.0-ypos);
         }
         else {
             xenv.store(latxpos[readpos]);
-            yenv.store(latypos[readpos]);
+            yenv.store(1.0-latypos[readpos]);
         }
         beatPos += beatsPerSample;
         ratePos += 1 / srate * ratehz;

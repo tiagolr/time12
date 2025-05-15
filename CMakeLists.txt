@@ -95,6 +95,8 @@ source_group(Source\\dsp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dsp/Filter.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dsp/Transient.h
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dsp/Transient.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/dsp/Delay.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/dsp/Delay.cpp
 )
 
 # Make the SourceFiles buildable

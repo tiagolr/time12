@@ -22,7 +22,7 @@ namespace globals {
 	// Anti noise
 	inline const int ANOISE_LAT_OFF = 0;
 	inline const int ANOISE_LAT_LOW = 2;
-	inline const int ANOISE_LAT_MED = 500;
+	inline const int ANOISE_LAT_MED = 5;
 	inline const int ANOISE_LAT_HIGH = 5;
 
 	// Audio trigger

@@ -13,6 +13,7 @@
 #include "dsp/Pattern.h"
 #include "dsp/Filter.h"
 #include "dsp/Transient.h"
+#include "dsp/Delay.h"
 #include "Presets.h"
 #include <atomic>
 #include <deque>
@@ -136,6 +137,7 @@ public:
     int64_t queuedPatternCountdown = 0; // samples counter until queued pattern is applied
     double xpos = 0.0; // envelope x pos (0..1)
     double ypos = 0.0; // envelope y pos (0..1)
+    double lypos = 0.0;
     double trigpos = 0.0; // used by trigger (Audio and MIDI) to detect one one shot envelope play
     double trigposSinceHit = 1.0; // used by audioIgnoreHitsWhilePlaying option
     double trigphase = 0.0; // phase when trigger occurs, used to sync the background wave draw
@@ -144,28 +146,34 @@ public:
     bool midiTrigger = false; // flag midi has triggered envelope
     int winpos = 0;
     int lwinpos = 0;
+    int lsync = 0;
     double ltension = -10.0;
     double ltensionatk = -10.0;
     double ltensionrel = -10.0;
     RCSmoother* value; // smooths envelope value
     bool showLatencyWarning = false;
 
-    // Latency state
+    // Latency and delay state
+    Delay delayL;
+    Delay delayR;
+    int ansamps = 0; // anti-noise nsamples for crossfade
+    int xfade = 0; // cross fade sample counter
+    double xfadepos = 0.0; // crossfade offset
     int latency = 0; // samples
     int writepos = 0;
     int readpos = 0;
     ANoise lanoise = ANoise::ANOff; // last anti noise setting
-    std::vector<double> latxpos = std::vector<double>(44100, 0.0); // delayed envelope xpos
-    std::vector<double> latypos = std::vector<double>(44100, 0.0); // delayed envelope ypos
-    std::vector<double> latviewpos = std::vector<double>(44100, 0.0); // delayed viewpos 
-    std::vector<double> latBufferL = std::vector<double>(44100, 0.0); // latency buffer left
-    std::vector<double> latBufferR = std::vector<double>(44100, 0.0); // latency buffer right
+    std::vector<double> latxpos = std::vector<double>(2048, 0.0); // delayed envelope xpos
+    std::vector<double> latypos = std::vector<double>(2048, 0.0); // delayed envelope ypos
+    std::vector<double> latviewpos = std::vector<double>(2048, 0.0); // delayed viewpos 
+    std::vector<double> latBufferL = std::vector<double>(2048, 0.0); // latency buffer left
+    std::vector<double> latBufferR = std::vector<double>(2048, 0.0); // latency buffer right
 
     // Audio mode state
     bool audioTrigger = false; // flag audio has triggered envelope
     int audioTriggerCountdown = -1; // samples until audio envelope starts
-    std::vector<double> latMonitorBufferL = std::vector<double>(44100, 0.0); // latency monitor buffer left
-    std::vector<double> latMonitorBufferR = std::vector<double>(44100, 0.0); // latency monitor buffer right
+    std::vector<double> latMonitorBufferL = std::vector<double>(2048, 0.0); // latency monitor buffer left
+    std::vector<double> latMonitorBufferR = std::vector<double>(2048, 0.0); // latency monitor buffer right
     Filter lpFilterL{};
     Filter lpFilterR{};
     Filter hpFilterL{};
@@ -182,6 +190,8 @@ public:
     double beatsPerSecond = 1.0;
     int samplesPerBeat = 44100;
     double secondsPerBeat = 0.1;
+    double tempo = 60.0;
+    double ltempo = -1.0;
 
     // UI State
     std::vector<double> preSamples; // used by view to draw pre audio
@@ -205,6 +215,7 @@ public:
     ~TIME12AudioProcessor() override;
 
     void updateLatency(double sampleRate);
+    void resizeDelays(double sampleRate);
     void loadSettings();
     void saveSettings();
     void setScale(float value);

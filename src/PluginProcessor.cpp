@@ -836,11 +836,12 @@ void TIME12AudioProcessor::processBlockByType (AudioBuffer<FloatType>& buffer, j
             xfadepos = 1 + lypos * delayL.size;
         }
 
-        // anti-noise cross fade
-        // fades in new signal fades out old signal
         if (xfade > 0) {
-            outL = outL * (ansamps - xfade) / ansamps + delayL.read3(xfadepos + ansamps - xfade) * xfade / ansamps;
-            outR = outR * (ansamps - xfade) / ansamps + delayR.read3(xfadepos + ansamps - xfade) * xfade / ansamps;
+            double fadeOut = 0.5 * (1.0 + std::cos(MathConstants<double>::pi * xfade / ansamps));
+            double fadeIn = 1.0 - fadeOut;
+        
+            outL = outL * fadeOut + delayL.read3(xfadepos + ansamps - xfade) * fadeIn;
+            outR = outR * fadeOut + delayR.read3(xfadepos + ansamps - xfade) * fadeIn;
             xfade -= 1;
         }
 

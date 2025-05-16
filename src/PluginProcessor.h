@@ -156,9 +156,9 @@ public:
     // Latency and delay state
     Delay delayL;
     Delay delayR;
-    int ansamps = 100; // anti-noise nsamples for crossfade
+    int ansamps = 60; // anti-noise nsamples for crossfade
     int xfade = 0; // cross fade sample counter
-    double xfadepos = 0.0; // crossfade offset
+    double xfadepos = 0.0; // crossfade position
     int latency = 0; // samples
     int writepos = 0;
     int readpos = 0;

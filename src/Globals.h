@@ -15,7 +15,7 @@ namespace globals {
 	inline unsigned int COLOR_SEQ_MAX = 0xffffffff;
 	inline unsigned int COLOR_SEQ_MIN = 0xffffffff;
 	inline unsigned int COLOR_SEQ_INVX = 0xff00ffff;
-	inline unsigned int COLOR_SEQ_TEN = 0xff50ff60;
+	inline unsigned int COLOR_SEQ_TEN = 0xffff8050;
 	inline unsigned int COLOR_SEQ_TENA = 0xffffee50;
 	inline unsigned int COLOR_SEQ_TENR = 0xffffB950;
 

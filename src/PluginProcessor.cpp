@@ -769,6 +769,9 @@ void TIME12AudioProcessor::processBlockByType (AudioBuffer<FloatType>& buffer, j
                     delayR.reserve((int)srate * 5);
                     resizeDelays(srate);
                 }
+                else if (tempo != ltempo) {
+                    resizeDelays(srate); // FIX - initial tempo only set after plugin starts
+                }
 
                 ltempo = tempo;
             }

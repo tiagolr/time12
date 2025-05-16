@@ -145,7 +145,7 @@ public:
     bool midiTrigger = false; // flag midi has triggered envelope
     int winpos = 0;
     int lwinpos = 0;
-    int lsync = 0;
+    int lsync = -1;
     double ltension = -10.0;
     double ltensionatk = -10.0;
     double ltensionrel = -10.0;

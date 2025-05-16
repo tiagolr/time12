@@ -3,8 +3,7 @@
 
 void Delay::resize(int size_)
 {
-    buf.clear();
-    buf.resize(size_, 0);
+    buf.resize(size_, 0.0);
     size = (int)buf.size();
     curpos = 0;
     curval = 0;

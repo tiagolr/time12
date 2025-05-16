@@ -313,6 +313,15 @@ void TIME12AudioProcessor::restorePaintPatterns()
     sendChangeMessage();
 }
 
+void TIME12AudioProcessor::toggleShowKnobs()
+{
+    showKnobs = !showKnobs;
+    if (showAudioKnobs && !showKnobs) {
+        showAudioKnobs = false;
+    }
+    MessageManager::callAsync([this]() { sendChangeMessage(); });
+}
+
 //==============================================================================
 const juce::String TIME12AudioProcessor::getName() const
 {
@@ -538,8 +547,12 @@ void TIME12AudioProcessor::onSlider()
     else if (sync == 15) syncQN = 1./1.*1.5; // 1/4.
     else if (sync == 16) syncQN = 2./1.*1.5; // 1/2.
     else if (sync == 17) syncQN = 4./1.*1.5; // 1/1.
-    if (sync != lsync)
+    if (sync != lsync) {
         resizeDelays(srate);
+        if ((sync == 0 && !showKnobs) || (sync > 0 && showKnobs && !showAudioKnobs)) {
+            toggleShowKnobs();
+        }
+    }
     lsync = sync;
 
     if (sync == 0) {

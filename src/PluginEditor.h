@@ -87,10 +87,6 @@ private:
     std::unique_ptr<AudioDisplay> audioDisplay;
     TextButton paintButton;
     TextButton sequencerButton;
-    TextButton paintEditButton;
-    TextButton paintNextButton;
-    TextButton paintPrevButton;
-    Label paintPageLabel;
     ComboBox pointMenu;
     Label pointLabel;
     TextButton loopButton;
@@ -105,6 +101,10 @@ private:
     std::unique_ptr<PaintToolWidget> paintWidget;
     std::unique_ptr<SequencerWidget> seqWidget;
     Label latencyWarning;
+    TextButton showKnobsButton;
+
+    std::vector<juce::Component*> knobsRow;
+    std::vector<std::reference_wrapper<juce::Component>> thirdRow;
 
     TooltipWindow tooltipWindow;
 

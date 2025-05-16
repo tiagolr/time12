@@ -109,7 +109,10 @@ TIME12AudioProcessorEditor::TIME12AudioProcessorEditor (TIME12AudioProcessor& p)
     audioSettingsButton.setBounds(col, row, 25, 25);
     audioSettingsButton.onClick = [this]() {
         audioProcessor.showAudioKnobs = !audioProcessor.showAudioKnobs;
-        toggleUIComponents();
+        if (audioProcessor.showKnobs != audioProcessor.showAudioKnobs) 
+            audioProcessor.toggleShowKnobs();
+
+        MessageManager::callAsync([this]{ toggleUIComponents(); });
     };
     audioSettingsButton.setAlpha(0.0f);
     col += 35;
@@ -178,6 +181,15 @@ TIME12AudioProcessorEditor::TIME12AudioProcessorEditor (TIME12AudioProcessor& p)
     patSyncMenu.setBounds(col, row, 75, 25);
     patSyncAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>(audioProcessor.params, "patsync", patSyncMenu);
 
+    // SECOND ROW RIGHT
+    col = getWidth() - PLUG_PADDING;
+    addAndMakeVisible(showKnobsButton);
+    showKnobsButton.setAlpha(0.0f);
+    showKnobsButton.setBounds(col - 25, row, 25, 25);
+    showKnobsButton.onClick = [this]() {
+        audioProcessor.toggleShowKnobs();
+    };
+
     // KNOBS ROW
     row += 35;
     col = PLUG_PADDING;
@@ -230,6 +242,17 @@ TIME12AudioProcessorEditor::TIME12AudioProcessorEditor (TIME12AudioProcessor& p)
     addAndMakeVisible(*tensionrel);
     tensionrel->setBounds(col,row,80,65);
     col += 75;
+
+    knobsRow.push_back(rate.get());
+    knobsRow.push_back(phase.get());
+    knobsRow.push_back(min.get());
+    knobsRow.push_back(max.get());
+    knobsRow.push_back(smooth.get());
+    knobsRow.push_back(attack.get());
+    knobsRow.push_back(release.get());
+    knobsRow.push_back(tension.get());
+    knobsRow.push_back(tensionatk.get());
+    knobsRow.push_back(tensionrel.get());
 
     // AUDIO KNOBS
     col = PLUG_PADDING;
@@ -366,6 +389,14 @@ TIME12AudioProcessorEditor::TIME12AudioProcessorEditor (TIME12AudioProcessor& p)
     };
     col += 35;
 
+    thirdRow.push_back(paintButton);
+    thirdRow.push_back(loopButton);
+    thirdRow.push_back(sequencerButton);
+    thirdRow.push_back(pointLabel);
+    thirdRow.push_back(pointMenu);
+    thirdRow.push_back(loopButton);
+
+
     // THIRD ROW RIGHT
     col = getWidth() - PLUG_PADDING - 60;
 
@@ -456,48 +487,18 @@ TIME12AudioProcessorEditor::TIME12AudioProcessorEditor (TIME12AudioProcessor& p)
     };
     row += 35;
 
+    thirdRow.push_back(snapButton);
+    thirdRow.push_back(nudgeRightButton);
+    thirdRow.push_back(nudgeLeftButton);
+    thirdRow.push_back(redoButton);
+    thirdRow.push_back(undoButton);
+    thirdRow.push_back(*gridSelector);
+
     // PAINT TOOL
     col = PLUG_PADDING;
-    addAndMakeVisible(paintEditButton);
-    paintEditButton.setButtonText("Edit");
-    paintEditButton.setComponentID("button");
-    paintEditButton.setBounds(col, row+40/2-25/2, 60, 25);
-    paintEditButton.onClick = [this]() {
-        audioProcessor.togglePaintEditMode();
-    };
-
-    col += 65;
-    addAndMakeVisible(paintPrevButton);
-    paintPrevButton.setBounds(col+2, row+2, 20, 20);
-    paintPrevButton.setAlpha(0.f);
-    paintPrevButton.onClick = [this]() {
-        int page = audioProcessor.paintPage - 1;
-        if (page < 0) page = 3;
-        audioProcessor.paintPage = page;
-        toggleUIComponents();
-    };
-
-    addAndMakeVisible(paintPageLabel);
-    paintPageLabel.setText("16-24", dontSendNotification);
-    paintPageLabel.setJustificationType(Justification::centred);
-    paintPageLabel.setColour(Label::textColourId, Colour(COLOR_NEUTRAL));
-    paintPageLabel.setBounds(col, row+25-2, 45, 16);
-
-    col += 25;
-    addAndMakeVisible(paintNextButton);
-    paintNextButton.setBounds(col-2, row+2, 20, 20);
-    paintNextButton.setAlpha(0.f);
-    paintNextButton.onClick = [this]() {
-        int page = audioProcessor.paintPage + 1;
-        if (page > 3) page = 0;
-        audioProcessor.paintPage = page;
-        toggleUIComponents();
-    };
-
-    col += 25;
     paintWidget = std::make_unique<PaintToolWidget>(p);
     addAndMakeVisible(*paintWidget);
-    paintWidget->setBounds(col,row,PLUG_WIDTH - PLUG_PADDING - col, 40);
+    paintWidget->setBounds(col,row,PLUG_WIDTH - PLUG_PADDING * 2, 40);
 
     row += 50;
     col = PLUG_PADDING;
@@ -580,27 +581,28 @@ void TIME12AudioProcessorEditor::toggleUIComponents()
 
     int sync = (int)audioProcessor.params.getRawParameterValue("sync")->load();
     bool showAudioKnobs = audioProcessor.showAudioKnobs;
+    bool showKnobs = audioProcessor.showKnobs;
 
     // layout knobs
-    rate->setVisible(!showAudioKnobs);
-    phase->setVisible(!showAudioKnobs);
-    min->setVisible(!showAudioKnobs);
-    max->setVisible(!showAudioKnobs);
-    smooth->setVisible(!showAudioKnobs);
-    attack->setVisible(!showAudioKnobs);
-    release->setVisible(!showAudioKnobs);
-    tension->setVisible(!showAudioKnobs && !audioProcessor.dualTension);
-    tensionatk->setVisible(!showAudioKnobs && audioProcessor.dualTension);
-    tensionrel->setVisible(!showAudioKnobs && audioProcessor.dualTension);
+    rate->setVisible(!showAudioKnobs && showKnobs);
+    phase->setVisible(!showAudioKnobs && showKnobs);
+    min->setVisible(!showAudioKnobs && showKnobs);
+    max->setVisible(!showAudioKnobs && showKnobs);
+    smooth->setVisible(!showAudioKnobs && showKnobs);
+    attack->setVisible(!showAudioKnobs && showKnobs);
+    release->setVisible(!showAudioKnobs && showKnobs);
+    tension->setVisible(!showAudioKnobs && !audioProcessor.dualTension && showKnobs);
+    tensionatk->setVisible(!showAudioKnobs && audioProcessor.dualTension && showKnobs);
+    tensionrel->setVisible(!showAudioKnobs && audioProcessor.dualTension && showKnobs);
 
-    threshold->setVisible(showAudioKnobs);
-    sense->setVisible(showAudioKnobs);
-    lowcut->setVisible(showAudioKnobs);
-    highcut->setVisible(showAudioKnobs);
-    offset->setVisible(showAudioKnobs);
-    audioDisplay->setVisible(showAudioKnobs);
+    threshold->setVisible(showAudioKnobs && showKnobs);
+    sense->setVisible(showAudioKnobs && showKnobs);
+    lowcut->setVisible(showAudioKnobs && showKnobs);
+    highcut->setVisible(showAudioKnobs && showKnobs);
+    offset->setVisible(showAudioKnobs && showKnobs);
+    audioDisplay->setVisible(showAudioKnobs && showKnobs);
 
-    if (!showAudioKnobs) {
+    if (!showAudioKnobs && showKnobs) {
         auto col = PLUG_PADDING;
         auto row = PLUG_PADDING + 35 + 35;
         rate->setVisible(sync == 0);
@@ -635,12 +637,19 @@ void TIME12AudioProcessorEditor::toggleUIComponents()
         tensionrel->setTopLeftPosition(col, row);
     }
 
-    useSidechain.setVisible(showAudioKnobs);
-    useMonitor.setVisible(showAudioKnobs);
+    useSidechain.setVisible(showAudioKnobs  && showKnobs);
+    useMonitor.setVisible(showAudioKnobs  && showKnobs);
     useSidechain.setToggleState(audioProcessor.useSidechain, dontSendNotification);
     useMonitor.setToggleState(audioProcessor.useMonitor, dontSendNotification);
 
+    for (auto& comp : thirdRow) {
+        auto bounds = comp.get().getBounds();
+        comp.get().setBounds(bounds.withY(showKnobs ? smooth.get()->getBounds().getBottom() + 10 : showKnobsButton.getBottom() + 10));
+    }
+
     paintWidget->setVisible(audioProcessor.showPaintWidget);
+    paintWidget->setBounds(paintWidget->getBounds().withY(paintButton.getBottom() + 10));
+
     seqWidget->setVisible(audioProcessor.showSequencer);
     seqWidget->setBounds(seqWidget->getBounds().withY(paintWidget->isVisible() 
         ? paintWidget->getBounds().getBottom() + 10
@@ -661,16 +670,9 @@ void TIME12AudioProcessorEditor::toggleUIComponents()
 
     auto uimode = audioProcessor.uimode;
     paintButton.setToggleState(uimode == UIMode::Paint || (uimode == UIMode::PaintEdit && audioProcessor.luimode == UIMode::Paint), dontSendNotification);
-    paintEditButton.setVisible(audioProcessor.showPaintWidget);
-    paintEditButton.setToggleState(uimode == UIMode::PaintEdit, dontSendNotification);
-    paintNextButton.setVisible(audioProcessor.showPaintWidget);
-    paintPrevButton.setVisible(audioProcessor.showPaintWidget);
-    paintPageLabel.setVisible(audioProcessor.showPaintWidget);
+    paintWidget->toggleUIComponents();
 
     sequencerButton.setToggleState(uimode == UIMode::Seq || (uimode == UIMode::PaintEdit && audioProcessor.luimode == UIMode::Seq), dontSendNotification);
-
-    int firstPaintPat = audioProcessor.paintPage * 8 + 1;
-    paintPageLabel.setText(String(firstPaintPat) + "-" + String(firstPaintPat+7), dontSendNotification);
 
     repaint();
 }
@@ -684,6 +686,7 @@ void TIME12AudioProcessorEditor::paint (Graphics& g)
     if (audioProcessor.uimode == UIMode::Seq)
         bounds = bounds.withY((float)seqWidget->getBounds().getBottom() + 10);
 
+    // div
     auto grad = ColourGradient(
         Colours::black.withAlpha(0.25f),
         bounds.getTopLeft(),
@@ -694,9 +697,28 @@ void TIME12AudioProcessorEditor::paint (Graphics& g)
     g.setGradientFill(grad);
     g.fillRect(bounds);
 
+    // point icon
     g.setColour(Colour(COLOR_NEUTRAL));
     g.drawEllipse(pointLabel.getBounds().expanded(-2,-2).toFloat(), 1.f);
     g.fillEllipse(pointLabel.getBounds().expanded(-10,-10).toFloat());
+
+    // controls button
+    g.setColour(Colour(COLOR_ACTIVE));
+    auto rx = 7.0f;
+    auto ry = 3.0f;
+    bounds = showKnobsButton.getBounds().toFloat();
+    Path cbtn;
+    if (audioProcessor.showKnobs) {
+        cbtn.startNewSubPath(bounds.getCentreX() - rx, bounds.getCentreY() + ry);
+        cbtn.lineTo(bounds.getCentreX(), bounds.getCentreY() - ry);
+        cbtn.lineTo(bounds.getCentreX() + rx, bounds.getCentreY() + ry);
+    }
+    else {
+        cbtn.startNewSubPath(bounds.getCentreX() - rx, bounds.getCentreY() - ry);
+        cbtn.lineTo(bounds.getCentreX(), bounds.getCentreY() + ry);
+        cbtn.lineTo(bounds.getCentreX() + rx, bounds.getCentreY() - ry);
+    }
+    g.strokePath(cbtn, PathStrokeType(2.f));
 
     // draw loop play button
     auto trigger = (int)audioProcessor.params.getRawParameterValue("trigger")->load();
@@ -751,29 +773,6 @@ void TIME12AudioProcessorEditor::paint (Graphics& g)
         triCenter.translated(triRadius, 0)
     );
     g.fillPath(nudgeRightTriangle);
-
-    // draw rotate paint page triangles
-    if (audioProcessor.showPaintWidget) {
-        g.setColour(Colour(COLOR_ACTIVE));
-        triCenter = paintNextButton.getBounds().toFloat().getCentre();
-        triRadius = 5.f;
-        juce::Path paintNextTriangle;
-        paintNextTriangle.addTriangle(
-            triCenter.translated(-triRadius, -triRadius),
-            triCenter.translated(-triRadius, triRadius),
-            triCenter.translated(triRadius, 0)
-        );
-        g.fillPath(paintNextTriangle);
-
-        triCenter = paintPrevButton.getBounds().toFloat().getCentre();
-        juce::Path paintPrevTriangle;
-        paintPrevTriangle.addTriangle(
-            triCenter.translated(-triRadius, 0),
-            triCenter.translated(triRadius, -triRadius),
-            triCenter.translated(triRadius, triRadius)
-        );
-        g.fillPath(paintPrevTriangle);
-    }   
 
     // draw undo redo buttons
     auto canUndo = audioProcessor.uimode == UIMode::Seq
@@ -862,6 +861,9 @@ void TIME12AudioProcessorEditor::resized()
     auto bounds = settingsButton->getBounds();
     settingsButton->setBounds(bounds.withX(col - bounds.getWidth()));
     mixDial->setBounds(mixDial->getBounds().withRightX(settingsButton->getBounds().getX() - 10));
+
+    // second row
+    showKnobsButton.setBounds(showKnobsButton.getBounds().withRightX(getWidth() - PLUG_PADDING));
 
     // knobs row
     bounds = audioDisplay->getBounds();

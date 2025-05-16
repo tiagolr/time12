@@ -206,6 +206,7 @@ public:
     bool showAudioKnobs = false; // used by UI to toggle audio knobs
     bool showPaintWidget = false;
     bool showSequencer = false;
+    bool showKnobs = false;
 
     //==============================================================================
     TIME12AudioProcessor();
@@ -228,6 +229,7 @@ public:
     void setViewPattern(int index);
     void setPaintTool(int index);
     void restorePaintPatterns();
+    void toggleShowKnobs();
 
     //==============================================================================
     void prepareToPlay (double sampleRate, int samplesPerBlock) override;

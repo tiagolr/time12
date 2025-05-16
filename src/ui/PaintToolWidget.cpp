@@ -110,7 +110,7 @@ void PaintToolWidget::paint(Graphics& g)
 std::vector<Rectangle<int>> PaintToolWidget::getPatRects()
 {
     auto bounds = getLocalBounds();
-    bounds.removeFromLeft(120);
+    bounds.removeFromLeft(115);
     int patnum = 8;
     float gap = 5.0f;
 

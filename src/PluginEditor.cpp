@@ -572,9 +572,15 @@ void TIME12AudioProcessorEditor::toggleUIComponents()
     triggerMenu.setColour(ComboBox::textColourId, Colour(triggerColor));
     triggerMenu.setColour(ComboBox::outlineColourId, Colour(triggerColor));
     algoMenu.setVisible(trigger == Trigger::Audio);
+
+    bool audioWasVisible = audioSettingsButton.isVisible();
     audioSettingsButton.setVisible(trigger == Trigger::Audio);
+
     if (!audioSettingsButton.isVisible()) {
         audioProcessor.showAudioKnobs = false;
+        if (audioWasVisible && audioProcessor.showKnobs) {
+            audioProcessor.toggleShowKnobs();
+        }
     }
 
     loopButton.setVisible(trigger > 0);

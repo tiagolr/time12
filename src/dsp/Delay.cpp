@@ -37,7 +37,7 @@ void Delay::write(double s)
 
 double Delay::read(double delay)
 {
-    if (delay >= size) delay -= size;
+    if (delay >= size) return curval;
     double pos = (double)curpos - delay;
     if (pos < 0) {
         pos += (double)size;
@@ -53,7 +53,7 @@ double Delay::read(double delay)
 */
 double Delay::read3(double delay)
 {
-    if (delay >= size) delay -= size;
+    if (delay >= size) return curval;
     double pos = (double)curpos - delay;
     if (pos < 0) {
         pos += (double)size;

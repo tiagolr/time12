@@ -38,7 +38,6 @@ struct MidiOutMsg {
 enum ANoise {
     ANOff,
     ANLow,
-    ANMedium,
     ANHigh,
 };
 

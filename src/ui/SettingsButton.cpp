@@ -67,7 +67,13 @@ void SettingsButton::mouseDown(const juce::MouseEvent& e)
 	output.addSeparator();
 	output.addItem(701, "Bipolar CC", true, audioProcessor.bipolarCC);
 
+	PopupMenu antiNoise;
+	antiNoise.addItem(710, "Off", true, audioProcessor.anoise == ANoise::ANOff);
+	antiNoise.addItem(711, "Normal", true, audioProcessor.anoise == ANoise::ANLow);
+	antiNoise.addItem(712, "High", true, audioProcessor.anoise == ANoise::ANHigh);
+
 	PopupMenu options;
+	options.addSubMenu("Anti-noise", antiNoise);
 	options.addSubMenu("Output", output);
 	options.addSubMenu("Pattern select chn", triggerChn);
 	options.addSubMenu("Audio trigger", audioTrigger);
@@ -260,6 +266,12 @@ void SettingsButton::mouseDown(const juce::MouseEvent& e)
 			}
 			else if (result == 701) {
 				audioProcessor.bipolarCC = !audioProcessor.bipolarCC;
+			}
+			else if (result >= 710 && result <= 712) {
+				auto anoise = (ANoise)(result - 710);
+				MessageManager::callAsync([this, anoise]() {
+					audioProcessor.setAntiNoise(anoise);
+				});
 			}
 			else if (result == 1000) {
 				toggleAbout();

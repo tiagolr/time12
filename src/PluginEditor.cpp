@@ -40,8 +40,8 @@ TIME12AudioProcessorEditor::TIME12AudioProcessorEditor (TIME12AudioProcessor& p)
     presetExport.setBounds(10, 10, 100, 25);
     presetExport.onClick = [this] {
         std::ostringstream oss;
-        //auto points = audioProcessor.viewPattern->points;
-        auto points = audioProcessor.getPaintPatern(audioProcessor.paintTool)->points;
+        auto points = audioProcessor.viewPattern->points;
+        //auto points = audioProcessor.getPaintPatern(audioProcessor.paintTool)->points;
         for (const auto& point : points) {
             oss << point.x << " " << point.y << " " << point.tension << " " << point.type << " ";
         }

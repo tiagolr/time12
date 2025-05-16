@@ -267,8 +267,8 @@ double Pattern::get_y_pulse(Segment seg, double x)
   double cycle_width = (seg.x2 - seg.x1) / t;
   double x_in_cycle = cycle_width == 0.0 ? 0.0 : std::fmod((x - seg.x1), cycle_width);
   return x_in_cycle < cycle_width / 2
-    ? (seg.tension >= 0 ? seg.y1 : seg.y2)
-    : (seg.tension >= 0 ? seg.y2 : seg.y1);
+    ? (seg.tension <= 0 ? seg.y1 : seg.y2)
+    : (seg.tension <= 0 ? seg.y2 : seg.y1);
 }
 
 double Pattern::get_y_wave(Segment seg, double x)
@@ -295,7 +295,7 @@ double Pattern::get_y_stairs(Segment seg, double x)
   double step_index = 0.;
   double y_step_size = 0.;
 
-  if (seg.tension >= 0) {
+  if (seg.tension <= 0) {
     step_size = (seg.x2 - seg.x1) / t;
     step_index = std::floor((x - seg.x1) / step_size);
     y_step_size = (seg.y2 - seg.y1) / (t-1);
@@ -332,13 +332,13 @@ double Pattern::get_y_smooth_stairs(Segment seg, double x)
   if (seg.x1 == seg.x2)
     return seg.y2;
 
-  if (x < xx && seg.tension >= 0)
+  if (x < xx && seg.tension <= 0)
     return std::pow((x - xx1) / (xx - xx1), pwr) * (yy - yy1) + yy1;
 
-  if (x < xx && seg.tension < 0)
+  if (x < xx && seg.tension > 0)
     return -1 * (std::pow(1 - (x - xx1) / (xx - xx1), pwr) - 1) * (yy - yy1) + yy1;
 
-  if (x >= xx && seg.tension >= 0)
+  if (x >= xx && seg.tension <= 0)
     return -1 * (std::pow(1 - (x - xx) / (xx2 - xx), pwr) - 1) * (yy2 - yy) + yy;
 
   return std::pow((x - xx) / (xx2 - xx), pwr) * (yy2 - yy) + yy;

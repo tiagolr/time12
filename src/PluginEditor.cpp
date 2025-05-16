@@ -512,14 +512,6 @@ TIME12AudioProcessorEditor::TIME12AudioProcessorEditor (TIME12AudioProcessor& p)
     addAndMakeVisible(*view);
     view->setBounds(col,row,getWidth(), getHeight() - row);
 
-
-    addAndMakeVisible(latencyWarning);
-    latencyWarning.setText("Plugin latency has changed, restart playback", dontSendNotification);
-    latencyWarning.setColour(Label::backgroundColourId, Colours::black.withAlpha(0.5f));
-    latencyWarning.setJustificationType(Justification::centred);
-    latencyWarning.setColour(Label::textColourId, Colour(COLOR_ACTIVE));
-    latencyWarning.setBounds(view->getBounds().getCentreX() - 150, PLUG_HEIGHT - 20 - 25, 300, 25);
-
     // ABOUT
     about = std::make_unique<About>();
     addAndMakeVisible(*about);
@@ -640,8 +632,6 @@ void TIME12AudioProcessorEditor::toggleUIComponents()
     useMonitor.setVisible(showAudioKnobs);
     useSidechain.setToggleState(audioProcessor.useSidechain, dontSendNotification);
     useMonitor.setToggleState(audioProcessor.useMonitor, dontSendNotification);
-
-    latencyWarning.setVisible(audioProcessor.showLatencyWarning);
 
     paintWidget->setVisible(audioProcessor.showPaintWidget);
     seqWidget->setVisible(audioProcessor.showSequencer);
@@ -888,12 +878,6 @@ void TIME12AudioProcessorEditor::resized()
 
     bounds = seqWidget->getBounds();
     seqWidget->setBounds(bounds.withWidth(getWidth() - PLUG_PADDING * 2));
-
-    bounds = latencyWarning.getBounds();
-    latencyWarning.setBounds(bounds
-        .withX(view->getBounds().getCentreX() - bounds.getWidth() / 2)
-        .withY(getHeight() - 20 - bounds.getHeight())
-    );
 
     audioProcessor.plugWidth = getWidth();
     audioProcessor.plugHeight = getHeight();

@@ -20,10 +20,8 @@ namespace globals {
 	inline unsigned int COLOR_SEQ_TENR = 0xffffB950;
 
 	// Anti noise
-	inline const int ANOISE_LAT_OFF = 0;
-	inline const int ANOISE_LAT_LOW = 2;
-	inline const int ANOISE_LAT_MED = 5;
-	inline const int ANOISE_LAT_HIGH = 5;
+	inline const double ANOISE_LOW_MILLIS = 1.5;
+	inline const double ANOISE_HIGH_MILLIS = 4.0;
 
 	// Audio trigger
 	inline const int AUDIO_LATENCY_MILLIS = 5;

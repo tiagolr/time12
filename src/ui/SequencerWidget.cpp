@@ -24,7 +24,7 @@ SequencerWidget::SequencerWidget(TIME12AudioProcessor& p) : audioProcessor(p)
 		button.setBounds(col, row, w, h);
 		button.onClick = [this, shape]() {
 			audioProcessor.sequencer->selectedShape = audioProcessor.sequencer->selectedShape == shape ? SNone : shape;
-			audioProcessor.showPaintWidget = shape == SPTool;
+			audioProcessor.showPaintWidget = audioProcessor.sequencer->selectedShape == SPTool;
 			auto editMode = audioProcessor.sequencer->editMode;
 			if (editMode != EditMin && editMode != EditMax) {
 				audioProcessor.sequencer->editMode = EditMax;
@@ -47,9 +47,8 @@ SequencerWidget::SequencerWidget(TIME12AudioProcessor& p) : audioProcessor(p)
 	col = 0; // layout during resized()
 	addToolButton(silenceBtn, col, row, 25, 25, CellShape::SSilence); col += 25;
 	addToolButton(lineBtn, col, row, 25, 25, CellShape::SLine); col += 25;
-	addToolButton(rampdnBtn, col, row, 25, 25, CellShape::SRampDn); col += 25;
-	addToolButton(rampupBtn, col, row, 25, 25, CellShape::SRampUp); col += 25;
-	addToolButton(triBtn, col, row, 25, 25, CellShape::STri); col += 25;
+	addToolButton(lpointBtn, col, row, 25, 25, CellShape::SLPoint); col += 25;
+	addToolButton(rpointBtn, col, row, 25, 25, CellShape::SRPoint); col += 25;
 	addToolButton(ptoolBtn, col, row, 25, 25, CellShape::SPTool); col += 25;
 
 	row = 35;
@@ -154,12 +153,11 @@ void SequencerWidget::resized()
 	applyBtn.setBounds(col-60,row,60,25);
 
 	row = 0;
-	col = getLocalBounds().getCentreX() - 25*7/2;
+	col = getLocalBounds().getCentreX() - 25*6/2;
 	silenceBtn.setBounds(col, row, 25, 25); col+= 25;
 	lineBtn.setBounds(col, row, 25, 25); col+= 25;
-	rampdnBtn.setBounds(col, row, 25, 25); col+= 25;
-	rampupBtn.setBounds(col, row, 25, 25); col+= 25;
-	triBtn.setBounds(col, row, 25, 25); col+= 25;
+	lpointBtn.setBounds(col, row, 25, 25); col+= 25;
+	rpointBtn.setBounds(col, row, 25, 25); col+= 25;
 	ptoolBtn.setBounds(col, row, 25, 25); col+= 25;
 
 	auto bounds = clearBtn.getBounds();
@@ -208,35 +206,27 @@ void SequencerWidget::paint(Graphics& g)
 	silencePath.lineTo(bounds.getBottomRight());
 	g.strokePath(silencePath, PathStrokeType(1.f));
 
-	bounds = rampdnBtn.getBounds().toFloat();
-	g.setColour(seq->selectedShape == CellShape::SRampDn ? Colour(COLOR_ACTIVE) : Colour(COLOR_NEUTRAL));
+	bounds = lpointBtn.getBounds().toFloat();
+	g.setColour(seq->selectedShape == CellShape::SLPoint ? Colour(COLOR_ACTIVE) : Colour(COLOR_NEUTRAL));
 	//g.drawRect(bounds);
+	auto r = 3.0f;
 	bounds.expand(-5,-5);
-	Path rampdnPath;
-	rampdnPath.startNewSubPath(bounds.getBottomLeft());
-	rampdnPath.lineTo(bounds.getTopLeft());
-	rampdnPath.lineTo(bounds.getBottomRight());
-	g.strokePath(rampdnPath, PathStrokeType(1.f));
+	Path lppath;
+	lppath.startNewSubPath(bounds.getBottomLeft().withY(bounds.getCentreY()));
+	lppath.lineTo(bounds.getBottomRight().withY(bounds.getCentreY()));
+	g.strokePath(lppath, PathStrokeType(1.f));
+	g.fillEllipse(bounds.getX() - r, bounds.getCentreY()-r, r*2, r*2);
 
-	bounds = rampupBtn.getBounds().toFloat();
-	g.setColour(seq->selectedShape == CellShape::SRampUp ? Colour(COLOR_ACTIVE) : Colour(COLOR_NEUTRAL));
+	bounds = rpointBtn.getBounds().toFloat();
+	g.setColour(seq->selectedShape == CellShape::SRPoint ? Colour(COLOR_ACTIVE) : Colour(COLOR_NEUTRAL));
 	//g.drawRect(bounds);
+	r = 3.0f;
 	bounds.expand(-5,-5);
-	Path rampupPath;
-	rampupPath.startNewSubPath(bounds.getBottomLeft());
-	rampupPath.lineTo(bounds.getTopRight());
-	rampupPath.lineTo(bounds.getBottomRight());
-	g.strokePath(rampupPath, PathStrokeType(1.f));
-
-	bounds = triBtn.getBounds().toFloat();
-	g.setColour(seq->selectedShape == CellShape::STri ? Colour(COLOR_ACTIVE) : Colour(COLOR_NEUTRAL));
-	//g.drawRect(bounds);
-	bounds.expand(-5,-5);
-	Path triPath;
-	triPath.startNewSubPath(bounds.getBottomLeft());
-	triPath.lineTo(bounds.getTopRight().withX(bounds.getCentreX()));
-	triPath.lineTo(bounds.getBottomRight());
-	g.strokePath(triPath, PathStrokeType(1.f));
+	Path rppath;
+	rppath.startNewSubPath(bounds.getBottomLeft().withY(bounds.getCentreY()));
+	rppath.lineTo(bounds.getBottomRight().withY(bounds.getCentreY()));
+	g.strokePath(rppath, PathStrokeType(1.f));
+	g.fillEllipse(bounds.getRight() - r, bounds.getCentreY()-r, r*2, r*2);
 
 	bounds = lineBtn.getBounds().toFloat();
 	g.setColour(seq->selectedShape == CellShape::SLine ? Colour(COLOR_ACTIVE) : Colour(COLOR_NEUTRAL));
@@ -267,7 +257,7 @@ void SequencerWidget::paint(Graphics& g)
 	bounds = randomBtn.getBounds().expanded(-2,-2).toFloat();
 	g.fillRoundedRectangle(bounds, 3.0f);
 	g.setColour(Colour(COLOR_BG));
-	auto r = 3.0f;
+	r = 3.0f;
 	auto circle = Rectangle<float>(bounds.getCentreX() - r, bounds.getCentreY() - r, r*2.f, r*2.f);
 	g.fillEllipse(circle);
 	g.fillEllipse(circle.translated(-6.f,-6.f));

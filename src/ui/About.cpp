@@ -21,7 +21,7 @@ void About::paint(Graphics& g)
 	g.setFont(FontOptions(20.0f));
 	g.drawText("Copyright (C) Tilr 2025", bounds.removeFromTop(25), Justification::centred);
 	g.setColour(Colour(COLOR_ACTIVE));
-	g.drawText("github.com/tiagolr/TIME12", bounds.removeFromTop(25), Justification::centred);
+	g.drawText("github.com/tiagolr/time12", bounds.removeFromTop(25), Justification::centred);
 	g.setColour(Colours::white);
 	bounds.removeFromTop(40);
 	g.drawText("- Shift for fine slider adjustments.", bounds.removeFromTop(25), Justification::centredLeft);

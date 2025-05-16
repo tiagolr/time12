@@ -20,10 +20,9 @@ public:
     TextButton flipXBtn;
 
     TextButton silenceBtn;
-    TextButton rampupBtn;
-    TextButton rampdnBtn;
+    TextButton lpointBtn;
+    TextButton rpointBtn;
     TextButton lineBtn;
-    TextButton triBtn;
     TextButton ptoolBtn;
 
     TextButton randomBtn;

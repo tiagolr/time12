@@ -11,6 +11,8 @@ Sequencer::Sequencer(TIME12AudioProcessor& p) : audioProcessor(p)
     ramp.push_back({ 0, 1.0, 0.0, 0.0, 1 });
     line.push_back({ 0, 0.0, 1.0, 0.0, 1 });
     line.push_back({ 0, 1.0, 1.0, 0.0, 1 });
+    lpoint.push_back({ 0, 0.0, 1.0, 0.0, 1 });
+    rpoint.push_back({ 0, 1.0, 1.0, 0.0, 1 });
     tri.push_back({ 0, 0.0, 0.0, 0.0, 1 });
     tri.push_back({ 0, 0.5, 1.0, 0.0, 1 });
     tri.push_back({ 0, 1.0, 0.0, 0.0, 1 });
@@ -494,6 +496,8 @@ std::vector<PPoint> Sequencer::buildSeg(double minx, double maxx, Cell cell)
         : cell.shape == SRampDn ? ramp
         : cell.shape == STri ? tri
         : cell.shape == SLine ? line
+        : cell.shape == SLPoint ? lpoint
+        : cell.shape == SRPoint ? rpoint
         : cell.shape == SLink ? std::vector<PPoint>{}
         : cell.shape == SPTool ? audioProcessor.getPaintPatern(cell.ptool)->points
         : silence;
@@ -508,7 +512,7 @@ std::vector<PPoint> Sequencer::buildSeg(double minx, double maxx, Cell cell)
     }
 
     tmp->points = paint;
-    const auto size = tmp->points.size();
+    const auto size = (int)tmp->points.size();
     for (int i = 0; i < size; ++i) {
         auto& point = tmp->points[i];
         if (cell.tenatt != 0.0 || cell.tenrel != 0.0) {

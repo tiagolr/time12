@@ -14,6 +14,8 @@ enum CellShape {
     SRampUp,
     SRampDn,
     STri,
+    SLPoint,
+    SRPoint,
     SLine,
     SPTool,
     SLink,
@@ -44,7 +46,7 @@ class Sequencer {
 public:
     std::vector<Cell> cells;
     SeqEditMode editMode = SeqEditMode::EditMax;
-    CellShape selectedShape = CellShape::SRampDn;
+    CellShape selectedShape = CellShape::SLine;
     int patternIdx = -1;
 
     Sequencer(TIME12AudioProcessor& p);
@@ -91,6 +93,8 @@ private:
     std::vector<PPoint> silence;
     std::vector<PPoint> ramp;
     std::vector<PPoint> tri;
+    std::vector<PPoint> lpoint;
+    std::vector<PPoint> rpoint;
     std::vector<PPoint> line;
 
     std::vector<PPoint> backup;

@@ -135,8 +135,8 @@ void Pattern::buildSegments()
     // add ghost points outside the 0..1 boundary
     // allows the pattern to repeat itself and rotate seamlessly
     if (pts.size() == 0) {
-        pts.push_back({0, -1.0, 0.5, 0.0, 1});
-        pts.push_back({0, 2.0, 0.5, 0.0, 1});
+        pts.push_back({0, -1.0, 0.0, 0.0, 1});
+        pts.push_back({0, 2.0, 0.0, 0.0, 1});
     }
     else if (pts.size() == 1) {
         pts.push_back({0, -1.0, pts[0].y, 0.0, 1});

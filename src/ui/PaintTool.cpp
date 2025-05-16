@@ -84,9 +84,9 @@ void PaintTool::mouseDrag(const MouseEvent& e)
     int dx = e.getDistanceFromDragStartX();
     int dy = e.getDistanceFromDragStartY();
     invertx = startW + dx < 0;
-    inverty = startH - dy < 0;
+    inverty = startH + dy < 0;
     paintW = std::abs(startW + dx);
-    paintH = std::abs(startH - dy);
+    paintH = std::abs(startH + dy);
     if (snap) {
         // apply snapping to bounds to fix the size at snapped values
         auto bounds = getBounds().toNearestInt();
@@ -159,7 +159,7 @@ void PaintTool::apply()
 Rectangle<double> PaintTool::getBounds()
 {
     double x = mousePos.x - (invertx ? paintW : 0);
-    double y = mousePos.y - (inverty ? 0 : paintH);
+    double y = mousePos.y - (inverty ? paintH : 0);
     double r = x + paintW;
     double b = y + paintH;
 
@@ -172,11 +172,11 @@ Rectangle<double> PaintTool::getBounds()
         r = winx + winw;
     }
     if (y < winy) {
-        if (inverty) b += winy - y;
+        if (!inverty) b += winy - y;
         y = winy;
     }
     if (b > winy + winh) {
-        if (!inverty) y += winy + winh - b;
+        if (inverty) y += winy + winh - b;
         b = winy + winh;
     }
 

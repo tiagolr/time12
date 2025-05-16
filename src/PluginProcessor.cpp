@@ -59,9 +59,8 @@ TIME12AudioProcessor::TIME12AudioProcessor()
     // init patterns
     for (int i = 0; i < 12; ++i) {
         patterns[i] = new Pattern(i);
-        patterns[i]->insertPoint(0, 1, 0, 1);
-        patterns[i]->insertPoint(0.5, 0, 0, 1);
-        patterns[i]->insertPoint(1, 1, 0, 1);
+        patterns[i]->insertPoint(0.0, 0.0, 0, 1);
+        patterns[i]->insertPoint(1.0, 0.0, 0, 1);
         patterns[i]->buildSegments();
     }
 
@@ -75,8 +74,8 @@ TIME12AudioProcessor::TIME12AudioProcessor()
             }
         }
         else {
-            paintPatterns[i]->insertPoint(0.0, 1.0, 0.0, 1);
-            paintPatterns[i]->insertPoint(1.0, 0.0, 0.0, 1);
+            paintPatterns[i]->insertPoint(0.0, 0.0, 0.0, 1);
+            paintPatterns[i]->insertPoint(1.0, 1.0, 0.0, 1);
         }
         paintPatterns[i]->buildSegments();
     }

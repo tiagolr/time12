@@ -69,6 +69,7 @@ void SettingsButton::mouseDown(const juce::MouseEvent& e)
 
 	PopupMenu antiNoise;
 	antiNoise.addItem(710, "Off", true, audioProcessor.anoise == ANoise::ANOff);
+	antiNoise.addItem(713, "Linear", true, audioProcessor.anoise == ANoise::ANLinear);
 	antiNoise.addItem(711, "Normal", true, audioProcessor.anoise == ANoise::ANLow);
 	antiNoise.addItem(712, "High", true, audioProcessor.anoise == ANoise::ANHigh);
 
@@ -318,7 +319,7 @@ void SettingsButton::mouseDown(const juce::MouseEvent& e)
 			else if (result == 701) {
 				audioProcessor.bipolarCC = !audioProcessor.bipolarCC;
 			}
-			else if (result >= 710 && result <= 712) {
+			else if (result >= 710 && result <= 713) {
 				auto anoise = (ANoise)(result - 710);
 				MessageManager::callAsync([this, anoise]() {
 					audioProcessor.setAntiNoise(anoise);

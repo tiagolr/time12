@@ -20,6 +20,7 @@ namespace globals {
 	inline unsigned int COLOR_SEQ_TENR = 0xffffB950;
 
 	// Anti noise
+	inline const double ANOISE_LIN_MILLIS = 1.5;
 	inline const double ANOISE_LOW_MILLIS = 1.5;
 	inline const double ANOISE_HIGH_MILLIS = 4.0;
 

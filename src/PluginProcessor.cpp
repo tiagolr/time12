@@ -454,6 +454,7 @@ void TIME12AudioProcessor::setAntiNoise(ANoise mode)
     auto srate = getSampleRate();
     anoise = mode;
     ansamps = anoise == ANOff ? 0
+        : anoise == ANLinear ? (int)(ANOISE_LIN_MILLIS / 1000.0 * srate)
         : anoise == ANLow ? (int)(ANOISE_LOW_MILLIS / 1000.0 * srate)
         : (int)(ANOISE_HIGH_MILLIS / 1000.0 * srate);
 }
@@ -863,11 +864,17 @@ void TIME12AudioProcessor::processBlockByType (AudioBuffer<FloatType>& buffer, j
         }
 
         if (xfade > 0) {
-            double fadeOut = 0.5 * (1.0 + std::cos(MathConstants<double>::pi * xfade / ansamps));
-            double fadeIn = 1.0 - fadeOut;
+            if (anoise == ANLinear) {
+                outL = outL * (ansamps - xfade) / ansamps + delayL.read3(xfadepos + ansamps - xfade) * xfade / ansamps;
+                outR = outR * (ansamps - xfade) / ansamps + delayR.read3(xfadepos + ansamps - xfade) * xfade / ansamps;
+            } 
+            else {
+                double fadeOut = 0.5 * (1.0 + std::cos(MathConstants<double>::pi * xfade / ansamps));
+                double fadeIn = 1.0 - fadeOut;
         
-            outL = outL * fadeOut + delayL.read3(xfadepos + ansamps - xfade) * fadeIn;
-            outR = outR * fadeOut + delayR.read3(xfadepos + ansamps - xfade) * fadeIn;
+                outL = outL * fadeOut + delayL.read3(xfadepos + ansamps - xfade) * fadeIn;
+                outR = outR * fadeOut + delayR.read3(xfadepos + ansamps - xfade) * fadeIn;
+            }
             xfade -= 1;
         }
 

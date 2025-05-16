@@ -39,6 +39,7 @@ enum ANoise {
     ANOff,
     ANLow,
     ANHigh,
+    ANLinear
 };
 
 enum Trigger {

@@ -555,6 +555,7 @@ void TIME12AudioProcessorEditor::changeListenerCallback(ChangeBroadcaster* sourc
 
 void TIME12AudioProcessorEditor::parameterChanged (const juce::String& parameterID, float newValue)
 {
+    (void)newValue;
     if (parameterID == "grid" && audioProcessor.uimode == UIMode::Seq) {
         audioProcessor.sequencer->build();
     }

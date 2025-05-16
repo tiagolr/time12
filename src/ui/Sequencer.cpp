@@ -6,14 +6,14 @@ Sequencer::Sequencer(TIME12AudioProcessor& p) : audioProcessor(p)
     tmp = new Pattern(-1);
     pat = new Pattern(-1);
     clear();
-    ramp.push_back({ 0, 0.0, 1.0, 0.0, 1 });
     ramp.push_back({ 0, 0.0, 0.0, 0.0, 1 });
-    ramp.push_back({ 0, 1.0, 1.0, 0.0, 1 });
-    line.push_back({ 0, 0.0, 0.0, 0.0, 1 });
-    line.push_back({ 0, 1.0, 0.0, 0.0, 1 });
-    tri.push_back({ 0, 0.0, 1.0, 0.0, 1 });
-    tri.push_back({ 0, 0.5, 0.0, 0.0, 1 });
-    tri.push_back({ 0, 1.0, 1.0, 0.0, 1 });
+    ramp.push_back({ 0, 0.0, 1.0, 0.0, 1 });
+    ramp.push_back({ 0, 1.0, 0.0, 0.0, 1 });
+    line.push_back({ 0, 0.0, 1.0, 0.0, 1 });
+    line.push_back({ 0, 1.0, 1.0, 0.0, 1 });
+    tri.push_back({ 0, 0.0, 0.0, 0.0, 1 });
+    tri.push_back({ 0, 0.5, 1.0, 0.0, 1 });
+    tri.push_back({ 0, 1.0, 0.0, 0.0, 1 });
     silence.push_back({ 0, 0.0, 1.0, 0.0, 1 });
     silence.push_back({ 0, 1.0, 1.0, 0.0, 1 });
 }
@@ -227,8 +227,8 @@ void Sequencer::onMouseSegment(const MouseEvent& e, bool isDrag) {
 
     if (e.mods.isRightButtonDown()) {
         if (cell.shape == SSilence) return;
-        else if (editMode == EditMin) cell.maxy = 1.0;
-        else if (editMode == EditMax) cell.miny = 0.0;
+        else if (editMode == EditMin) cell.miny = 0.0;
+        else if (editMode == EditMax) cell.maxy = 0.0;
         else if (editMode == EditTenAtt) cell.tenatt = 0.0;
         else if (editMode == EditTenRel) cell.tenrel = 0.0;
         else if (editMode == EditTension) cell.tenatt = cell.tenrel = 0.0;
@@ -264,14 +264,14 @@ void Sequencer::onMouseSegment(const MouseEvent& e, bool isDrag) {
 
     
     if (editMode == EditMin) {
-        cell.maxy = y; // y coordinates are inverted
-        if (cell.miny > y)
-            cell.miny = y;
-    }
-    else if (editMode == EditMax) {
-        cell.miny = y; // y coordinates are inverted
+        cell.miny = y;
         if (cell.maxy < y)
             cell.maxy = y;
+    }
+    else if (editMode == EditMax) {
+        cell.maxy = y;
+        if (cell.miny > y)
+            cell.miny = y;
     }
     else if (editMode == EditInvertX) {
         if (!isDrag)
@@ -338,7 +338,7 @@ void Sequencer::clear()
 {
     cells.clear();
     for (int i = 0; i < SEQ_MAX_CELLS; ++i) {
-        cells.push_back({ SRampDn, SRampDn, 0, false, 0.0, 1.0, 0.0, 0.0 });
+        cells.push_back({ SLine, SLine, 0, false, 0.0, i % 2 ? 1/16.0 : 0.0, 0.0, 0.0 });
     }
 }
 
@@ -346,8 +346,8 @@ void Sequencer::clear(SeqEditMode mode)
 {
     auto snap = cells;
     for (auto& cell : cells) {
-        if (mode == EditMax) cell.miny = 0.0;
-        else if (mode == EditMin) cell.maxy = 1.0;
+        if (mode == EditMax) cell.maxy = 0.0;
+        else if (mode == EditMin) cell.miny = 1.0;
         else if (mode == EditInvertX) cell.invertx = cell.shape == CellShape::SRampUp;
         else if (mode == EditTenAtt) {
             if (cell.invertx) 
@@ -457,7 +457,7 @@ void Sequencer::processLinkCells(std::vector<PPoint>& pts, int nCells)
             if (prevpts.size() > 0) {
                 auto& prevpt = prevpts.back();
                 auto& nextpt = pts[(getPointIndex(prevpt) + 1) % (int)pts.size()];
-                auto isAttack = prevpt->y > nextpt.y;
+                auto isAttack = prevpt->y < nextpt.y;
                 prevpt->tension = isAttack ? cell.tenatt : cell.tenrel * -1;
             }
         }
@@ -487,7 +487,7 @@ std::vector<PPoint> Sequencer::buildSeg(double minx, double maxx, Cell cell)
 {
     std::vector<PPoint> pts;
     double w = maxx-minx;
-    double miny = cell.miny;
+    double maxy = cell.miny;
     double h = cell.maxy-cell.miny;
 
     auto paint = cell.shape == SRampUp ? ramp
@@ -499,7 +499,7 @@ std::vector<PPoint> Sequencer::buildSeg(double minx, double maxx, Cell cell)
         : silence;
 
     if (cell.shape == SSilence) {
-        miny = 1;
+        maxy = 0;
         h = 0;
     }
 
@@ -512,7 +512,7 @@ std::vector<PPoint> Sequencer::buildSeg(double minx, double maxx, Cell cell)
     for (int i = 0; i < size; ++i) {
         auto& point = tmp->points[i];
         if (cell.tenatt != 0.0 || cell.tenrel != 0.0) {
-            auto isAttack = i < size - 2 && point.y > tmp->points[i + 1].y;
+            auto isAttack = i < size - 2 && point.y < tmp->points[i + 1].y;
             point.tension = isAttack ? cell.tenatt : cell.tenrel * -1;
         }
     }
@@ -520,7 +520,7 @@ std::vector<PPoint> Sequencer::buildSeg(double minx, double maxx, Cell cell)
 
     for (auto& point : tmp->points) {
         double px = minx + point.x * w; // map points to rectangle bounds
-        double py = miny + point.y * h;
+        double py = maxy + point.y * h;
         pts.push_back({ 0, px, py, point.tension, point.type });
     }
 
@@ -558,13 +558,13 @@ void Sequencer::randomize(SeqEditMode mode, double min, double max)
         // maxy and miny are inverted as well as the y coordinates on screen
         // the logic is to map the random min to the cell bottom
         // the random max gets scaled proportionally to the new range
-        if (mode == EditMax) {
+        if (mode == EditMin) {
             rmin = std::max(rmin, 1.0 - cell.maxy);
             rmax = std::max(rmin + (max - min) * (1 - rmin), rmax);
         }
         // same thing but random max is mapped to the cell ceiling
         // and random min is scaled proportionally
-        else if (mode == EditMin) {
+        else if (mode == EditMax) {
             rmax = std::min(rmax, 1.0 - cell.miny);
             rmin = std::min(rmax - (max - min) * rmax, rmin);
         }
@@ -586,8 +586,8 @@ void Sequencer::randomize(SeqEditMode mode, double min, double max)
             else cell.tenrel = (value * 2 - 1) * -1;
         }
         else if (mode == EditTension) cell.tenrel = cell.tenatt = (value * 2 - 1) * -1;
-        else if (mode == EditMax) cell.miny = std::min(1.0 - value, cell.maxy);
-        else if (mode == EditMin) cell.maxy = std::max(1.0 - value, cell.miny);
+        else if (mode == EditMin) cell.miny = std::min(value, cell.maxy);
+        else if (mode == EditMax) cell.maxy = std::max(value, cell.miny);
         else if (mode == EditInvertX) cell.invertx = flag;
         else if (mode == EditSilence) {
             if (flag && cell.shape != SSilence)

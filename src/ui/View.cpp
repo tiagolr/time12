@@ -597,7 +597,7 @@ void View::mouseDrag(const juce::MouseEvent& e)
         auto& mpoint = getPointFromMidpoint(selectedMidpoint);
         auto& next = getPointFromMidpoint(selectedMidpoint + 1);
         if (mpoint.y < next.y) distance *= -1;
-        float tension = (float)origTension + float(distance) / 500.f;
+        float tension = (float)origTension + float(distance) / 500.f * -1;
         if (tension > 1) tension = 1;
         if (tension < -1) tension = -1;
         mpoint.tension = tension;

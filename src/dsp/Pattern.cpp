@@ -207,6 +207,7 @@ double Pattern::get_y_curve(Segment seg, double x)
     auto ten = seg.tension + (rise ? -tmult : tmult);
     if (ten > 1) ten = 1;
     if (ten < -1) ten = -1;
+    ten *= -1;
     auto pwr = pow(1.1, std::fabs(ten * 50));
 
     if (seg.x1 == seg.x2)
@@ -235,6 +236,7 @@ double Pattern::get_y_scurve(Segment seg, double x)
   auto ten = seg.tension + (rise ? -tmult : tmult);
   if (ten > 1) ten = 1;
   if (ten < -1) ten = -1;
+  ten *= -1;
   auto pwr = pow(1.1, std::fabs(ten * 50));
 
   double xx = (seg.x2 + seg.x1) / 2;

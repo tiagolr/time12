@@ -190,7 +190,7 @@ void View::drawGrid(Graphics& g)
 void View::drawSegments(Graphics& g)
 {
     double lastX = winx;
-    double lastY = audioProcessor.viewPattern->get_y_at(0) * winh + winy;
+    double lastY = audioProcessor.viewPattern->get_y_at(0.001) * winh + winy;
 
     Path linePath;
     Path shadePath;
@@ -198,7 +198,7 @@ void View::drawSegments(Graphics& g)
     linePath.startNewSubPath((float)lastX, (float)lastY);
     shadePath.startNewSubPath((float)lastX, (float)winy); // Start from top left
 
-    for (int i = 0; i < winw + 1; ++i)
+    for (int i = 1; i < winw + 1; ++i)
     {
         double px = double(i) / double(winw);
         double py = audioProcessor.viewPattern->get_y_at(px) * winh + winy;

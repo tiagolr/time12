@@ -555,10 +555,7 @@ void TIME12AudioProcessorEditor::changeListenerCallback(ChangeBroadcaster* sourc
 
 void TIME12AudioProcessorEditor::parameterChanged (const juce::String& parameterID, float newValue)
 {
-    if (parameterID == "pattern") {
-        patterns[(int)newValue - 1].get()->setToggleState(true, dontSendNotification);
-    }
-    else if (parameterID == "grid" && audioProcessor.uimode == UIMode::Seq) {
+    if (parameterID == "grid" && audioProcessor.uimode == UIMode::Seq) {
         audioProcessor.sequencer->build();
     }
 
@@ -567,6 +564,7 @@ void TIME12AudioProcessorEditor::parameterChanged (const juce::String& parameter
 
 void TIME12AudioProcessorEditor::toggleUIComponents()
 {
+    patterns[audioProcessor.pattern->index].get()->setToggleState(true, dontSendNotification);
     auto trigger = (int)audioProcessor.params.getRawParameterValue("trigger")->load();
     auto triggerColor = trigger == 0 ? COLOR_ACTIVE : trigger == 1 ? COLOR_MIDI : COLOR_AUDIO;
     triggerMenu.setColour(ComboBox::arrowColourId, Colour(triggerColor));

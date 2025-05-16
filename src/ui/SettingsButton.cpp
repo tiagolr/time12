@@ -89,61 +89,112 @@ void SettingsButton::mouseDown(const juce::MouseEvent& e)
 	load.addSeparator();
 	load.addItem(109, "Init");
 
-	PopupMenu patterns1;
-	PopupMenu patterns2;
-	PopupMenu patterns3;
+	PopupMenu stutter1;
+	PopupMenu stutter2;
+	PopupMenu stutter3;
+	PopupMenu pattern;
+	PopupMenu complex;
+	PopupMenu chaos;
 
-	patterns1.addItem(110, "Load All");
-	patterns1.addSeparator();
-	patterns1.addItem(111, "Empty");
-	patterns1.addItem(112, "Gate 2");
-	patterns1.addItem(113, "Gate 4");
-	patterns1.addItem(114, "Gate 8");
-	patterns1.addItem(115, "Gate 12");
-	patterns1.addItem(116, "Gate 16");
-	patterns1.addItem(117, "Gate 24");
-	patterns1.addItem(118, "Gate 32");
-	patterns1.addItem(119, "Trance 1");
-	patterns1.addItem(120, "Trance 2");
-	patterns1.addItem(121, "Trance 3");
-	patterns1.addItem(122, "Trance 4");
+	stutter1.addItem(2000, "Load All");
+	stutter1.addSeparator();
+	stutter1.addItem(2001, "Empty");
+	stutter1.addItem(2002, "Stutter 1");
+	stutter1.addItem(2003, "Stutter 2");
+	stutter1.addItem(2004, "Stutter 3");
+	stutter1.addItem(2005, "Stutter 4");
+	stutter1.addItem(2006, "Stutter 5");
+	stutter1.addItem(2007, "Stutter 6");
+	stutter1.addItem(2008, "Stutter 7");
+	stutter1.addItem(2009, "Stutter 8");
+	stutter1.addItem(2010, "Stutter 9");
+	stutter1.addItem(2011, "Stutter 10");
+	stutter1.addItem(2012, "Stutter 11");
 
-	patterns2.addItem(123, "Load All");
-	patterns2.addSeparator();
-	patterns2.addItem(124, "Saw 1");
-	patterns2.addItem(125, "Saw 2");
-	patterns2.addItem(126, "Step 1");
-	patterns2.addItem(127, "Step 1 FadeIn");
-	patterns2.addItem(128, "Step 4 Gate");
-	patterns2.addItem(129, "Off Beat");
-	patterns2.addItem(130, "Dynamic 1/4");
-	patterns2.addItem(131, "Swing");
-	patterns2.addItem(132, "Gate Out");
-	patterns2.addItem(133, "Gate In");
-	patterns2.addItem(134, "Speed up");
-	patterns2.addItem(135, "Speed Down");
+	stutter2.addItem(2013, "Load All");
+	stutter2.addSeparator();
+	stutter2.addItem(2014, "Stutter 12");
+	stutter2.addItem(2015, "Stutter 13");
+	stutter2.addItem(2016, "Stutter 14");
+	stutter2.addItem(2017, "Stutter 15");
+	stutter2.addItem(2018, "Stairs 1");
+	stutter2.addItem(2019, "Stairs 2");
+	stutter2.addItem(2020, "Stairs 3");
+	stutter2.addItem(2021, "Stairs 4");
+	stutter2.addItem(2022, "Stairs 5");
+	stutter2.addItem(2023, "Stairs 6");
+	stutter2.addItem(2024, "Stairs 7");
+	stutter2.addItem(2025, "Empty");
 
-	patterns3.addItem(136, "Load All");
-	patterns3.addSeparator();
-	patterns3.addItem(137, "End Fade");
-	patterns3.addItem(138, "End Gate");
-	patterns3.addItem(139, "Tremolo Slow");
-	patterns3.addItem(140, "Tremolo Fast");
-	patterns3.addItem(141, "Sidechain");
-	patterns3.addItem(142, "Drum Loop");
-	patterns3.addItem(143, "Copter");
-	patterns3.addItem(144, "AM");
-	patterns3.addItem(145, "Fade In");
-	patterns3.addItem(146, "Fade Out");
-	patterns3.addItem(147, "Fade OutIn");
-	patterns3.addItem(148, "Mute");
+	stutter3.addItem(2026, "Load All");
+	stutter3.addSeparator();
+	stutter3.addItem(2027, "Gated 1");
+	stutter3.addItem(2028, "Gated 2");
+	stutter3.addItem(2029, "Shuffle 1");
+	stutter3.addItem(2030, "Shuffle 2");
+	stutter3.addItem(2031, "Shuffle 3");
+	stutter3.addItem(2032, "Shuffle 4");
+	stutter3.addItem(2033, "Empty");
+	stutter3.addItem(2034, "Empty");
+	stutter3.addItem(2035, "Empty");
+	stutter3.addItem(2036, "Empty");
+	stutter3.addItem(2037, "Empty");
+	stutter3.addItem(2038, "Empty");
+
+	pattern.addItem(2039, "Load All");
+	pattern.addSeparator();
+	pattern.addItem(2040, "Basic 1");
+	pattern.addItem(2041, "Basic 2");
+	pattern.addItem(2042, "Basic 3");
+	pattern.addItem(2043, "Basic 4");
+	pattern.addItem(2044, "Basic 5");
+	pattern.addItem(2045, "Basic 6");
+	pattern.addItem(2046, "Basic 7");
+	pattern.addItem(2047, "Basic 8");
+	pattern.addItem(2048, "Basic 9");
+	pattern.addItem(2049, "Basic 10");
+	pattern.addItem(2050, "Basic 11");
+	pattern.addItem(2051, "Basic 12");
+
+	complex.addItem(2052, "Load All");
+	complex.addSeparator();
+	complex.addItem(2053, "Complex 1");
+	complex.addItem(2054, "Complex 2");
+	complex.addItem(2055, "Complex 3");
+	complex.addItem(2056, "Complex 4");
+	complex.addItem(2057, "Complex 5");
+	complex.addItem(2058, "Complex 6");
+	complex.addItem(2059, "Complex 7");
+	complex.addItem(2060, "Complex 8");
+	complex.addItem(2061, "Complex 9");
+	complex.addItem(2062, "Complex 10");
+	complex.addItem(2063, "Complex 11");
+	complex.addItem(2064, "Complex 12");
+
+	chaos.addItem(2065, "Load All");
+	chaos.addSeparator();
+	chaos.addItem(2066, "Chaos 1");
+	chaos.addItem(2067, "Chaos 2");
+	chaos.addItem(2068, "Chaos 3");
+	chaos.addItem(2069, "Chaos 4");
+	chaos.addItem(2070, "Chaos 5");
+	chaos.addItem(2071, "Chaos 6");
+	chaos.addItem(2072, "Chaos 7");
+	chaos.addItem(2073, "Chaos 8");
+	chaos.addItem(2074, "Chaos 9");
+	chaos.addItem(2075, "Chaos 10");
+	chaos.addItem(2076, "Chaos 11");
+	chaos.addItem(2077, "Chaos 12");
 
 	PopupMenu loadOther;
 	loadOther.addItem(150, "Restore paint patterns");
 
-	load.addSubMenu("Patterns 01-12", patterns1);
-	load.addSubMenu("Patterns 13-25", patterns2);
-	load.addSubMenu("Patterns 26-38", patterns3);
+	load.addSubMenu("Stutter 1", stutter1);
+	load.addSubMenu("Stutter 2", stutter2);
+	load.addSubMenu("Stutter 3", stutter3);
+	load.addSubMenu("Pattern", pattern);
+	load.addSubMenu("Complex", complex);
+	load.addSubMenu("Chaos", chaos);
 	load.addSeparator();
 	load.addSubMenu("Other", loadOther);
 	
@@ -240,14 +291,14 @@ void SettingsButton::mouseDown(const juce::MouseEvent& e)
 					audioProcessor.viewPattern->loadRandom(grid);
 					audioProcessor.viewPattern->buildSegments();
 				}
-				if (result >= 110 && result < 150) {
-					MessageManager::callAsync([this, result]() {
-						audioProcessor.loadProgram(result-110+1);
-					});
-				}
 				if (result == 150) {
 					audioProcessor.restorePaintPatterns();
 				}
+			}
+			else if (result >= 2000 && result < 2100) {
+				MessageManager::callAsync([this, result]() {
+					audioProcessor.loadProgram(result-2000+1);
+				});
 			}
 			// output cc channel
 			else if (result >= 300 && result <= 300 + 129) {

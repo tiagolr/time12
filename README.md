@@ -19,13 +19,19 @@
 
 </div>
 
-**TIME-12** is a cross-platform envelope generator for .... inspired by plugins like GrossBeat and ShaperBox. It is the second version of [TIME-1](https://github.com/tiagolr/time1) rebuilt from scratch using the _JUCE_ framework.
+**TIME-12** is a cross-platform is a delay modulator inspired by plugins like GrossBeat and ShaperBox. It can be used for a wide range of effects like stuttering, tape stop, glitch, scratch, reverse, pitch shift and more. It is the second version of [TIME-1](https://github.com/tiagolr/time1) rebuilt from scratch using the _JUCE_ framework.
 
 <div align="center">
 
 ![Screenshot](./doc/time12.png)
 
 </div>
+
+
+Also check other plugins from this collection:
+
+* [GATE-12](https://github.com/tiagolr/gate12) - An envelope generator for volume/gate control.
+
 
 ## Whats new
 
@@ -61,7 +67,7 @@
 
 ## About
 
-TIME-12 is an envelope generator plugin that combines some of the best features of GrossBeat and ShaperBox, it includes a point system very similar to GrossBeat but also with some great features of ShaperBox like self repeating patterns, multi-point selections that can be scaled or skewed, audio envelope triggering and more.
+TIME-12 is an envelope based plugin that combines some of the best features of GrossBeat and ShaperBox, it includes a point system very similar to GrossBeat but also with some great features of ShaperBox like self repeating patterns, multi-point selections that can be scaled or skewed, audio envelope triggering and more.
 
 With version 2 this plugin was rebuilt from scratch using JUCE for its cross-platforms capabilities, maintainability and overall development tools/processes.
 

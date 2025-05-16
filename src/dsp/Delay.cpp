@@ -1,19 +1,23 @@
 #include "Delay.h"
 #include <cmath>
 
-void Delay::resize(int size_)
+void Delay::resize(int newSize, bool clear)
 {
-    buf.resize(size_, 0.0);
-    size = (int)buf.size();
-    curpos = 0;
-    curval = 0;
-}
-
-void Delay::setSize(int sz)
-{
-    if (sz <= buf.size()) {
-        size = std::max(sz, 1);
+    if (clear) {
+        if (newSize > size) {
+            buf.resize(newSize, 0.0);
+        }
+        curpos = 0;
+        curval = 0;
     }
+    else {
+        if (newSize > size) {
+            buf.resize(newSize);
+            std::fill(buf.begin() + size, buf.end(), 0.0);
+        }
+        curpos %= newSize;
+    }
+    size = newSize;
 }
 
 void Delay::reserve(int samples)

@@ -3,12 +3,11 @@
 
 class Delay {
 public:
-	void resize(int size);
+	void resize(int size, bool clear);
 	void write(double s);
 	double read(double delay);
 	double read3(double delay);
 	void clear();
-	void setSize(int sz);
 	void reserve(int samples);
 	int size = 0;
 

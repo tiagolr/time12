@@ -59,8 +59,8 @@ TIME12AudioProcessor::TIME12AudioProcessor()
     // init patterns
     for (int i = 0; i < 12; ++i) {
         patterns[i] = new Pattern(i);
-        patterns[i]->insertPoint(0.0, 0.0, 0, 1);
-        patterns[i]->insertPoint(1.0, 0.0, 0, 1);
+        patterns[i]->insertPoint(0.0, 0.0, 0, 0);
+        patterns[i]->insertPoint(1.0, 0.0, 0, 0);
         patterns[i]->buildSegments();
     }
 
@@ -162,20 +162,20 @@ void TIME12AudioProcessor::setScale(float s)
     saveSettings();
 }
 
-void TIME12AudioProcessor::resizeDelays(double srate)
+void TIME12AudioProcessor::resizeDelays(double srate, bool clear)
 {
     auto sync = (int)params.getRawParameterValue("sync")->load();
     const int size = sync == 0 
         ? (int)(srate * 10)
         : (int)(syncQN * srate * 60 / tempo);
 
-    delayL.resize(size);
-    delayR.resize(size);
+    delayL.resize(size, clear);
+    delayR.resize(size, clear);
 
     if (sync == 0) {
         auto ratehz = (double)params.getRawParameterValue("rate")->load();
-        delayL.setSize((int)(srate / ratehz));
-        delayR.setSize((int)(srate / ratehz));
+        delayL.resize((int)(srate / ratehz), clear);
+        delayR.resize((int)(srate / ratehz), clear);
     }
 }
 
@@ -361,7 +361,7 @@ double TIME12AudioProcessor::getTailLengthSeconds() const
 
 int TIME12AudioProcessor::getNumPrograms()
 {
-    return 40;
+    return 79;
 }
 
 int TIME12AudioProcessor::getCurrentProgram()
@@ -393,12 +393,14 @@ void TIME12AudioProcessor::loadProgram (int index)
 
     if (index == 0) { // Init
         for (int i = 0; i < 12; ++i) {
-            patterns[i]->loadTriangle();
+            patterns[i]->clear();
+            patterns[i]->insertPoint(0.0, 0.0, 0, 0);
+            patterns[i]->insertPoint(1.0, 0.0, 0, 0);
             patterns[i]->buildSegments();
             patterns[i]->clearUndo();
         }
     }
-    else if (index == 1 || index == 14 || index == 27) {
+    else if (index % 13 == 1) {
         for (int i = 0; i < 12; ++i) {
             loadPreset(*patterns[i], index + i);
         }
@@ -413,11 +415,14 @@ void TIME12AudioProcessor::loadProgram (int index)
 
 const juce::String TIME12AudioProcessor::getProgramName (int index)
 {
-    static const std::array<juce::String, 40> progNames = {
+    static const std::array<juce::String, 79> progNames = {
         "Init",
-        "Load Patterns 01-12", "Empty", "Gate 2", "Gate 4", "Gate 8", "Gate 12", "Gate 16", "Gate 24", "Gate 32", "Trance 1", "Trance 2", "Trance 3", "Trance 4",
-        "Load Patterns 13-25", "Saw 1", "Saw 2", "Step 1", "Step 1 FadeIn", "Step 4 Gate", "Off Beat", "Dynamic 1/4", "Swing", "Gate Out", "Gate In", "Speed up", "Speed Down",
-        "Load Patterns 26-38", "End Fade", "End Gate", "Tremolo Slow", "Tremolo Fast", "Sidechain", "Drum Loop", "Copter", "AM", "Fade In", "Fade Out", "Fade OutIn", "Mute"
+        "Stutter 1 Load All","Empty","Stutter 1","Stutter 2","Stutter 3","Stutter 4","Stutter 5","Stutter 6","Stutter 7","Stutter 8","Stutter 9","Stutter 10","Stutter 11",
+        "Stutter 2 Load All","Stutter 12","Stutter 13","Stutter 14","Stutter 15","Stairs 1","Stairs 2","Stairs 3","Stairs 4","Stairs 5","Stairs 6","Stairs 7","Empty",
+        "Stutter 3 Load All","Gated 1","Gated 2","Shuffle 1","Shuffle 2","Shuffle 3","Shuffle 4","Empty","Empty","Empty","Empty","Empty","Empty",
+        "Basic Load All","Empty","Basic 2","Basic 3","Basic 4","Basic 5","Basic 6","Basic 7","Basic 8","Basic 9","Basic 10","Basic 11","Basic 12",
+        "Complex Load All","Complex 1","Complex 2","Complex 3","Complex 4","Complex 5","Complex 6","Complex 7","Complex 8","Complex 9","Complex 10","Complex 11","Complex 12",
+        "Chaos Load All","Chaos 1","Chaos 2","Chaos 3","Chaos 4","Chaos 5","Chaos 6","Chaos 7","Chaos 8","Chaos 9","Chaos 10","Chaos 11","Chaos 12",
     };
     return progNames.at(index);
 }
@@ -439,7 +444,7 @@ void TIME12AudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock
     hpFilterR.clear(0.0);
     transDetectorL.clear(sampleRate);
     transDetectorR.clear(sampleRate);
-    resizeDelays(sampleRate);
+    resizeDelays(sampleRate, true);
     setAntiNoise(anoise);
     onSlider();
 }
@@ -547,18 +552,12 @@ void TIME12AudioProcessor::onSlider()
     else if (sync == 16) syncQN = 2./1.*1.5; // 1/2.
     else if (sync == 17) syncQN = 4./1.*1.5; // 1/1.
     if (sync != lsync) {
-        resizeDelays(srate);
+        resizeDelays(srate, true);
         if ((sync == 0 && !showKnobs) || (sync > 0 && showKnobs && !showAudioKnobs)) {
             toggleShowKnobs();
         }
     }
     lsync = sync;
-
-    if (sync == 0) {
-        double ratehz = (double)params.getRawParameterValue("rate")->load();
-        delayL.setSize((int)(srate / ratehz));
-        delayR.setSize((int)(srate / ratehz));
-    }
 
     auto highcut = (double)params.getRawParameterValue("highcut")->load();
     auto lowcut = (double)params.getRawParameterValue("lowcut")->load();
@@ -765,12 +764,12 @@ void TIME12AudioProcessor::processBlockByType (AudioBuffer<FloatType>& buffer, j
                 tempo = *tempo_;
 
                 if (ltempo != -1.0 && ltempo != tempo) { 
-                    delayL.reserve((int)srate * 5); // tempo is changing, allocate memory so resizes become cheap
-                    delayR.reserve((int)srate * 5);
-                    resizeDelays(srate);
+                    delayL.reserve((int)srate * 10); // tempo is changing, allocate memory so resizes become cheap
+                    delayR.reserve((int)srate * 10);
+                    resizeDelays(srate, false);
                 }
                 else if (tempo != ltempo) {
-                    resizeDelays(srate); // FIX - initial tempo only set after plugin starts
+                    resizeDelays(srate, false); // FIX - initial tempo only set after plugin starts
                 }
 
                 ltempo = tempo;

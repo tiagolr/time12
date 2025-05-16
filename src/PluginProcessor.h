@@ -213,7 +213,7 @@ public:
 
     void setAntiNoise(ANoise mode);
     void updateLatency(double sampleRate);
-    void resizeDelays(double sampleRate);
+    void resizeDelays(double sampleRate, bool clear);
     void loadSettings();
     void saveSettings();
     void setScale(float value);

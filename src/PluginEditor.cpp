@@ -518,6 +518,13 @@ TIME12AudioProcessorEditor::TIME12AudioProcessorEditor (TIME12AudioProcessor& p)
     about->setBounds(getBounds());
     about->setVisible(false);
 
+    addAndMakeVisible(latencyWarning);
+    latencyWarning.setText("Plugin latency has changed, restart playback", dontSendNotification);
+    latencyWarning.setColour(Label::backgroundColourId, Colours::black.withAlpha(0.5f));
+    latencyWarning.setJustificationType(Justification::centred);
+    latencyWarning.setColour(Label::textColourId, Colour(COLOR_ACTIVE));
+    latencyWarning.setBounds(view->getBounds().getCentreX() - 150, PLUG_HEIGHT - 20 - 25, 300, 25);
+
     customLookAndFeel = new CustomLookAndFeel();
     setLookAndFeel(customLookAndFeel);
 
@@ -649,6 +656,8 @@ void TIME12AudioProcessorEditor::toggleUIComponents()
     else {
         view->setBounds(view->getBounds().withTop(paintWidget->getBounds().getY() - 10));
     }
+
+    latencyWarning.setVisible(audioProcessor.showLatencyWarning);
 
     auto uimode = audioProcessor.uimode;
     paintButton.setToggleState(uimode == UIMode::Paint || (uimode == UIMode::PaintEdit && audioProcessor.luimode == UIMode::Paint), dontSendNotification);
@@ -878,6 +887,12 @@ void TIME12AudioProcessorEditor::resized()
 
     bounds = seqWidget->getBounds();
     seqWidget->setBounds(bounds.withWidth(getWidth() - PLUG_PADDING * 2));
+
+    bounds = latencyWarning.getBounds();
+    latencyWarning.setBounds(bounds
+        .withX(view->getBounds().getCentreX() - bounds.getWidth() / 2)
+        .withY(getHeight() - 20 - bounds.getHeight())
+    );
 
     audioProcessor.plugWidth = getWidth();
     audioProcessor.plugHeight = getHeight();

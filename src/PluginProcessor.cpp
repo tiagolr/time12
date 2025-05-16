@@ -623,6 +623,10 @@ void TIME12AudioProcessor::onStop()
     delayL.clear();
     delayR.clear();
     clearLatencyBuffers();
+    if (showLatencyWarning) {
+        showLatencyWarning = false;
+        MessageManager::callAsync([this]() { sendChangeMessage(); });
+    }
 }
 
 void TIME12AudioProcessor::clearDrawBuffers()
@@ -633,11 +637,15 @@ void TIME12AudioProcessor::clearDrawBuffers()
 
 void TIME12AudioProcessor::clearLatencyBuffers()
 {
+    if (getLatencySamples() != latency && playing) {
+        showLatencyWarning = true;
+        MessageManager::callAsync([this]() { sendChangeMessage(); });
+    }
     latency = getLatencySamples();
-    std::fill(latBufferL.begin(), latBufferL.end(), 0.0);
-    std::fill(latBufferR.begin(), latBufferR.end(), 0.0);
-    std::fill(latMonitorBufferL.begin(), latMonitorBufferL.end(), 0.0);
-    std::fill(latMonitorBufferR.begin(), latMonitorBufferR.end(), 0.0);
+    latBufferL.resize(latency, 0.0);
+    latBufferR.resize(latency, 0.0);
+    latMonitorBufferL.resize(latency, 0.0);
+    latMonitorBufferR.resize(latency, 0.0);
     std::fill(monSamples.begin(), monSamples.end(), 0.0);
     writepos = 0;
 }
@@ -730,7 +738,9 @@ void TIME12AudioProcessor::processBlockByType (AudioBuffer<FloatType>& buffer, j
     bool looping = false;
     double loopStart = 0.0;
     double loopEnd = 0.0;
-    latency = getLatencySamples();
+    if (latency != getLatencySamples()) {
+        clearLatencyBuffers();
+    }
 
     // Get playhead info
     if (auto* phead = getPlayHead()) {
@@ -759,12 +769,15 @@ void TIME12AudioProcessor::processBlockByType (AudioBuffer<FloatType>& buffer, j
                 loopEnd = loopPoints->ppqEnd;
             }
             auto play = pos->getIsPlaying();
-            if (!playing && play) // playback started
+            bool playToggle = !playing && play;
+            bool stopToggle = playing && !play;
+            playing = play;
+
+            if (playToggle) 
                 onPlay();
-            else if (playing && !play) // playback stopped
+            else if (stopToggle)
                 onStop();
 
-            playing = play;
             if (playing) {
                 if (auto samples = pos->getTimeInSamples()) {
                     timeInSamples = *samples;

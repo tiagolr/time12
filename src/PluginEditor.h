@@ -104,6 +104,7 @@ private:
     std::unique_ptr<View> view;
     std::unique_ptr<PaintToolWidget> paintWidget;
     std::unique_ptr<SequencerWidget> seqWidget;
+    Label latencyWarning;
 
     TooltipWindow tooltipWindow;
 

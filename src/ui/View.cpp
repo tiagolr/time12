@@ -127,7 +127,7 @@ void View::drawWave(Graphics& g, std::vector<double>& samples, Colour color) con
     wavePath.lineTo((float)(winw + winx - 1), (float)(winy + winh));
     wavePath.closeSubPath();
 
-    g.setColour(color.withAlpha(0.4f));
+    g.setColour(color.withAlpha(0.25f));
     g.fillPath(wavePath);
 }
 

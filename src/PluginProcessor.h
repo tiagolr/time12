@@ -151,6 +151,7 @@ public:
     double ltensionatk = -10.0;
     double ltensionrel = -10.0;
     RCSmoother* value; // smooths envelope value
+    bool showLatencyWarning = false;
 
     // Latency and delay state
     Delay delayL;
@@ -166,10 +167,10 @@ public:
     // Audio mode state
     bool audioTrigger = false; // flag audio has triggered envelope
     int audioTriggerCountdown = -1; // samples until audio envelope starts
-    std::vector<double> latBufferL = std::vector<double>(2048, 0.0); // latency buffer left
-    std::vector<double> latBufferR = std::vector<double>(2048, 0.0); // latency buffer right
-    std::vector<double> latMonitorBufferL = std::vector<double>(2048, 0.0); // latency monitor buffer left
-    std::vector<double> latMonitorBufferR = std::vector<double>(2048, 0.0); // latency monitor buffer right
+    std::vector<double> latBufferL; // latency buffer left
+    std::vector<double> latBufferR; // latency buffer right
+    std::vector<double> latMonitorBufferL; // latency monitor buffer left
+    std::vector<double> latMonitorBufferR; // latency monitor buffer right
     Filter lpFilterL{};
     Filter lpFilterR{};
     Filter hpFilterL{};

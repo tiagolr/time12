@@ -53,8 +53,6 @@ Also check other plugins from this collection:
   * Paint mode with user defined shapes
   * Point type - hold, curve, s-curve, stairs ..
   * Tempo sync or lfo rate (Hz)
-  * Attack and release smooth
-  * Pre and post waveform display
   * MIDI trigger mode
   * Audio trigger mode
   * Sequencer and randomizer

@@ -972,6 +972,12 @@ void TIME12AudioProcessor::processBlockByType (AudioBuffer<FloatType>& buffer, j
         midiMessages.addEvent(cc, 0);
     }
 
+    // keep beatPos in sync with playhead so plugin can be bypassed and return to its sync pos
+    if (playing) {
+        beatPos = ppqPosition;
+        ratePos = beatPos * secondsPerBeat * ratehz;
+    }
+
     for (int sample = 0; sample < numSamples; ++sample) {
         if (playing && looping && beatPos >= loopEnd) {
             beatPos = loopStart + (beatPos - loopEnd);

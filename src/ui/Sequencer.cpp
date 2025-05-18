@@ -349,7 +349,7 @@ void Sequencer::clear(SeqEditMode mode)
     auto snap = cells;
     for (auto& cell : cells) {
         if (mode == EditMax) cell.maxy = 0.0;
-        else if (mode == EditMin) cell.miny = 1.0;
+        else if (mode == EditMin) cell.miny = 0.0;
         else if (mode == EditInvertX) cell.invertx = cell.shape == CellShape::SRampUp;
         else if (mode == EditTenAtt) {
             if (cell.invertx) 

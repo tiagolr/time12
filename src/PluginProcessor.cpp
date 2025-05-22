@@ -828,7 +828,7 @@ void TIME12AudioProcessor::processBlockByType (AudioBuffer<FloatType>& buffer, j
     auto processDisplaySample = [&](int sampidx, double pos, double prelsamp, double prersamp) {
         auto preamp = std::max(std::fabs(prelsamp), std::fabs(prersamp));
         auto postlsamp = (double)buffer.getSample(0, sampidx);
-        auto postrsamp = audioOutputs > 1 ? (double)buffer.getSample(0, sampidx) : postlsamp;
+        auto postrsamp = audioInputs > 1 ? (double)buffer.getSample(1, sampidx) : postlsamp;
         auto postamp = std::max(std::fabs(postlsamp), std::fabs(postrsamp));
         winpos = (int)std::floor(pos * viewW);
         if (lwinpos != winpos) {

@@ -53,6 +53,7 @@ public:
     void mouseWheelMove(const juce::MouseEvent& event, const juce::MouseWheelDetails& wheel) override;
     void mouseExit (const MouseEvent& event) override;
     bool keyPressed(const juce::KeyPress& key) override;
+    void insertNewPoint(const MouseEvent& event);
 
     void showPointContextMenu(const juce::MouseEvent& event);
     void showContextMenu(const MouseEvent& e);
@@ -77,7 +78,7 @@ private:
     int snapshotIdx = 0; // used for undo after drag
 
     // Multiselect
-    Multiselect multiselect;
+    Multiselect multiSelect;
     Point<int> preSelectionStart = Point(-1,-1);
     Point<int> preSelectionEnd = Point(-1,-1);
 

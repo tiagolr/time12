@@ -70,6 +70,7 @@ public:
     void rotate(double x);
     void clear();
     void buildSegments();
+    std::vector<Segment> getSegments();
     void loadSine();
     void loadTriangle();
     void loadRandom(int grid);

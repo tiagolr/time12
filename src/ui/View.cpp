@@ -11,7 +11,7 @@
 #include "../PluginProcessor.h"
 #include <utility>
 
-View::View(TIME12AudioProcessor& p) : audioProcessor(p), multiselect(p), paintTool(p)
+View::View(TIME12AudioProcessor& p) : audioProcessor(p), multiSelect(p), paintTool(p)
 {
     setWantsKeyboardFocus(true);
     startTimerHz(60);
@@ -25,14 +25,14 @@ void View::timerCallback()
 {
     if (patternID != audioProcessor.viewPattern->versionID || audioProcessor.uimode != luimode) {
         if (audioProcessor.uimode != luimode)
-            multiselect.clearSelection();
+            multiSelect.clearSelection();
         preSelectionStart = Point<int>(-1,-1);
         selectedMidpoint = -1;
         selectedPoint = -1;
-        multiselect.mouseHover = -1;
+        multiSelect.mouseHover = -1;
         hoverPoint = -1;
         hoverMidpoint = -1;
-        multiselect.recalcSelectionArea();
+        multiSelect.recalcSelectionArea();
         patternID = audioProcessor.viewPattern->versionID;
     }
     if (audioProcessor.queuedPattern && isEnabled()) {
@@ -56,7 +56,7 @@ void View::resized()
     winw = bounds.getWidth() - PLUG_PADDING * 2;
     winh = bounds.getHeight() - PLUG_PADDING * 2 - 10;
 
-    multiselect.setViewBounds(winx, winy, winw, winh);
+    multiSelect.setViewBounds(winx, winy, winw, winh);
     paintTool.setViewBounds(winx, winy, winw, winh);
     audioProcessor.sequencer->setViewBounds(winx, winy, winw, winh);
     juce::Component::SafePointer<View> safeThis(this); // FIX Renoise DAW crashing on plugin instantiated
@@ -64,7 +64,7 @@ void View::resized()
         if (safeThis != nullptr)
             safeThis->audioProcessor.viewW = safeThis->winw;
     });
-    multiselect.recalcSelectionArea();
+    multiSelect.recalcSelectionArea();
 }
 
 void View::paint(Graphics& g) {
@@ -88,7 +88,7 @@ void View::paint(Graphics& g) {
     }
 
     drawGrid(g);
-    multiselect.drawBackground(g);
+    multiSelect.drawBackground(g);
     drawSegments(g);
 
     if (uimode == UIMode::Normal || uimode == UIMode::PaintEdit) {
@@ -101,7 +101,7 @@ void View::paint(Graphics& g) {
     }
 
     drawPreSelection(g);
-    multiselect.draw(g);
+    multiSelect.draw(g);
 
     if (uimode != UIMode::PaintEdit) {
         drawSeek(g);
@@ -284,7 +284,7 @@ std::vector<double> View::getMidpointXY(Segment seg)
 
 void View::drawMidPoints(Graphics& g)
 {
-    auto segs = audioProcessor.viewPattern->segments;
+    auto segs = audioProcessor.viewPattern->getSegments();
 
     // draw midpoints
     g.setColour(Colour(COLOR_ACTIVE));
@@ -341,7 +341,7 @@ int View::getHoveredPoint(int x, int y)
     for (auto i = 0; i < points.size(); ++i) {
         auto xx = (int)(points[i].x * winw + winx);
         auto yy = (int)(points[i].y * winh + winy);
-        if (pointInRect(x, y, xx - POINT_RADIUS, yy - POINT_RADIUS, POINT_RADIUS * 2, POINT_RADIUS * 2)) {
+        if (pointInRect(x, y, xx - HOVER_RADIUS, yy - HOVER_RADIUS, HOVER_RADIUS * 2, HOVER_RADIUS * 2)) {
             return i;
         }
     }
@@ -350,11 +350,13 @@ int View::getHoveredPoint(int x, int y)
 
 int View::getHoveredMidpoint(int x, int y)
 {
-    auto segs = audioProcessor.viewPattern->segments;
+    auto segs = audioProcessor.viewPattern->getSegments();
     for (auto i = 0; i < segs.size(); ++i) {
         auto& seg = segs[i];
         auto xy = getMidpointXY(seg);
-        if (!isCollinear(seg) && seg.type != PointType::Hold && pointInRect(x, y, (int)xy[0] - MPOINT_RADIUS, (int)xy[1] - MPOINT_RADIUS, MPOINT_RADIUS * 2, MPOINT_RADIUS * 2)) {
+        if (!isCollinear(seg) && seg.type != PointType::Hold && pointInRect(x, y, 
+            (int)xy[0] - MPOINT_HOVER_RADIUS, (int)xy[1] - MPOINT_HOVER_RADIUS, MPOINT_HOVER_RADIUS * 2, MPOINT_HOVER_RADIUS * 2)) 
+        {
             return i;
         }
     }
@@ -400,9 +402,9 @@ void View::mouseDown(const juce::MouseEvent& e)
         paintTool.mouseDown(e);
     }
     else if (e.mods.isLeftButtonDown()) {
-        if (multiselect.mouseHover > -1) {
+        if (multiSelect.mouseHover > -1) {
             setMouseCursor(MouseCursor::NoCursor);
-            multiselect.mouseDown(e);
+            multiSelect.mouseDown(e);
             return;
         }
 
@@ -428,7 +430,7 @@ void View::mouseDown(const juce::MouseEvent& e)
         }
     }
     else if (e.mods.isRightButtonDown()) {
-        if (multiselect.mouseHover > -1) {
+        if (multiSelect.mouseHover > -1) {
             return;
         }
         rmousePoint = getHoveredPoint(x, y);
@@ -464,19 +466,24 @@ void View::mouseUp(const juce::MouseEvent& e)
             // ----
         }
         else if (selectedMidpoint > -1) { // finished dragging midpoint, place cursor at midpoint
-            auto& mpoint = getPointFromMidpoint(selectedMidpoint);
-            auto& next = getPointFromMidpoint(selectedMidpoint + 1);
-            double midx = (mpoint.x + next.x) / 2.;
-            int x = (int)(midx * winw + winx) + getScreenPosition().x;
-            int y = (int)(audioProcessor.viewPattern->get_y_at(midx) * winh + winy) + getScreenPosition().y;
-            Desktop::getInstance().setMousePosition(juce::Point<int>(x, y));
+            int x = e.getMouseDownX();
+            int y = (int)(audioProcessor.viewPattern->get_y_at((x - winx) / (double)winw) * winh + winy);
+            Desktop::getInstance().setMousePosition(juce::Point<int>(x + getScreenPosition().x, y + getScreenPosition().y));
         }
-        else if (preSelectionStart.x > -1) { // finished creating selection
-            multiselect.makeSelection(e, preSelectionStart, preSelectionEnd);
+        else if (preSelectionStart.x > -1 && (std::abs(preSelectionStart.x - preSelectionEnd.x) > 4 || 
+            std::abs(preSelectionStart.y - preSelectionEnd.y) > 4))
+        {
+            multiSelect.makeSelection(e, preSelectionStart, preSelectionEnd);
         }
-        else if (!multiselect.selectionPoints.empty()) { // finished dragging selection
-            multiselect.mouseUp(e); // FIX - points may have been inverted due to selection drag
-        }   
+        else if (multiSelect.mouseHover > -1) {
+            multiSelect.mouseUp(e);
+        }
+        else if (!multiSelect.selectionPoints.empty()) { // finished dragging selection
+            multiSelect.clearSelection();
+        }
+        else if (hoverPoint == -1 && hoverMidpoint == -1 && e.mods.isAltDown()) {
+            insertNewPoint(e);
+        }
     }
     // if there were changes on mouseup, create undo point from previous snapshot
     if (snapshotIdx == audioProcessor.viewPattern->index) {
@@ -493,7 +500,7 @@ void View::mouseMove(const juce::MouseEvent& e)
 {
     hoverPoint = -1;
     hoverMidpoint = -1;
-    multiselect.mouseHover = -1;
+    multiSelect.mouseHover = -1;
 
     if (!isEnabled() || patternID != audioProcessor.viewPattern->versionID)
         return;
@@ -516,8 +523,8 @@ void View::mouseMove(const juce::MouseEvent& e)
     }
 
     // multi selection mouse over
-    multiselect.mouseMove(e);
-    if (multiselect.mouseHover > -1) {
+    multiSelect.mouseMove(e);
+    if (multiSelect.mouseHover > -1) {
         return;
     }
 
@@ -543,12 +550,12 @@ void View::mouseDrag(const juce::MouseEvent& e)
         return;
     }
 
-    if (multiselect.mouseHover > -1 && e.mods.isRightButtonDown()) {
+    if (multiSelect.mouseHover > -1 && e.mods.isRightButtonDown()) {
         return;
     }
 
-    if (multiselect.mouseHover > -1 && e.mods.isLeftButtonDown()) {
-        multiselect.mouseDrag(e);
+    if (multiSelect.mouseHover > -1 && e.mods.isLeftButtonDown()) {
+        multiSelect.mouseDrag(e);
         return;
     }
 
@@ -627,8 +634,8 @@ void View::mouseDoubleClick(const juce::MouseEvent& e)
         return;
     }
 
-    if (multiselect.mouseHover > -1) {
-        multiselect.clearSelection();
+    if (multiSelect.mouseHover > -1) {
+        multiSelect.clearSelection();
         return;
     }
 
@@ -643,28 +650,16 @@ void View::mouseDoubleClick(const juce::MouseEvent& e)
         hoverPoint = -1;
         hoverMidpoint = -1;
     }
-    if (pt == -1 && mid > -1) {
+    else if (pt == -1 && mid > -1) {
         getPointFromMidpoint(mid).tension = 0;
     }
-    if (pt == -1 && mid == -1) {
-        double px = (double)x;
-        double py = (double)y;
-        if (isSnapping(e)) {
-            double grid = (double)audioProcessor.getCurrentGrid();
-            double gridx = double(winw) / grid;
-            double gridy = double(winh) / grid;
-            px = std::round(double(px - winx) / gridx) * gridx + winx;
-            py = std::round(double(py - winy) / gridy) * gridy + winy;
-        }
-        px = double(px - winx) / (double)winw;
-        py = double(py - winy) / (double)winh;
-        if (px >= 0 && px <= 1 && py >= 0 && py <= 1) { // point in env window
-            audioProcessor.viewPattern->insertPoint(px, py, 0, audioProcessor.pointMode);
-            audioProcessor.viewPattern->sortPoints(); // keep things consistent, avoids reorders later
-        }
+    else if (pt == -1 && mid == -1) {
+        insertNewPoint(e);
     }
 
-    audioProcessor.createUndoPointFromSnapshot(snapshot);
+    if (snapshotIdx == audioProcessor.viewPattern->index) {
+        audioProcessor.createUndoPointFromSnapshot(snapshot);
+    }
     audioProcessor.viewPattern->buildSegments();
 }
 
@@ -695,9 +690,9 @@ bool View::keyPressed(const juce::KeyPress& key)
     }
 
     // remove selected points
-    if (key == KeyPress::deleteKey && !multiselect.selectionPoints.empty()) {
+    if (key == KeyPress::deleteKey && !multiSelect.selectionPoints.empty()) {
         audioProcessor.createUndoPoint();
-        multiselect.deleteSelectedPoints();
+        multiSelect.deleteSelectedPoints();
         return true;
     }
 
@@ -714,6 +709,26 @@ void View::mouseExit(const MouseEvent& event)
     selectedPoint = -1;
     selectedMidpoint = -1;
     hoverMidpoint = -1;
+}
+
+void View::insertNewPoint(const MouseEvent& e)
+{
+    double px = e.getPosition().x;
+    double py = e.getPosition().y;
+    if (isSnapping(e)) {
+        double grid = (double)audioProcessor.getCurrentGrid();
+        double gridx = double(winw) / grid;
+        double gridy = double(winh) / grid;
+        px = std::round(double(px - winx) / gridx) * gridx + winx;
+        py = std::round(double(py - winy) / gridy) * gridy + winy;
+    }
+    px = double(px - winx) / (double)winw;
+    py = double(py - winy) / (double)winh;
+    if (px >= 0 && px <= 1 && py >= 0 && py <= 1) { // point in env window
+        audioProcessor.viewPattern->insertPoint(px, py, 0, audioProcessor.pointMode);
+        audioProcessor.viewPattern->sortPoints(); // keep things consistent, avoids reorders later
+    }
+    audioProcessor.viewPattern->buildSegments();
 }
 
 void View::showPointContextMenu(const juce::MouseEvent& event)
@@ -747,24 +762,35 @@ void View::showContextMenu(const juce::MouseEvent& event)
     menu.addItem(1, "Select all");
     menu.addItem(2, "Deselect");
     menu.addSeparator();
+    menu.addItem(5, "Copy");
+    menu.addItem(6, "Paste");
     menu.addItem(3, "Clear");
-    if (!multiselect.selectionPoints.empty()) {
+    if (!multiSelect.selectionPoints.empty()) {
         menu.addItem(4, "Delete points");
     }
 
     menu.showMenuAsync(PopupMenu::Options().withTargetComponent(this).withMousePosition(),[this](int result) {
         if (result == 0) return;
-        if (result == 1) multiselect.selectAll();
-        if (result == 2) multiselect.clearSelection();
-        if (result == 3) {
+        else if (result == 1) multiSelect.selectAll();
+        else if (result == 2) multiSelect.clearSelection();
+        else if (result == 3) {
             auto snapshot = audioProcessor.viewPattern->points;
             audioProcessor.viewPattern->clear();
             audioProcessor.viewPattern->buildSegments();
             audioProcessor.createUndoPointFromSnapshot(snapshot);
         }
-        if (result == 4 && !multiselect.selectionPoints.empty()) {
+        else if (result == 4 && !multiSelect.selectionPoints.empty()) {
             audioProcessor.createUndoPoint();
-            multiselect.deleteSelectedPoints();
+            multiSelect.deleteSelectedPoints();
+        }
+        else if (result == 5) {
+            audioProcessor.viewPattern->copy();
+        }
+        else if (result == 6) {
+            auto snapshot = audioProcessor.viewPattern->points;
+            audioProcessor.viewPattern->paste();
+            audioProcessor.viewPattern->buildSegments();
+            audioProcessor.createUndoPointFromSnapshot(snapshot);
         }
     });
 }

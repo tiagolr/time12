@@ -1,10 +1,10 @@
 /*
-  ==============================================================================
+==============================================================================
 
-    Multiselect.cpp
-    Author:  tiagolr
+Multiselect.cpp
+Author:  tiagolr
 
-  ==============================================================================
+==============================================================================
 */
 #include "Multiselect.h"
 #include "../PluginProcessor.h"
@@ -52,7 +52,7 @@ void Multiselect::draw(Graphics& g)
         quadPath.lineTo((float)q[2].x, (float)q[2].y);
         quadPath.closeSubPath();
         g.strokePath(quadPath, PathStrokeType(1.0f));
-        
+
         drawHandles(g);
     }
 }
@@ -97,7 +97,7 @@ void Multiselect::drawHandles(Graphics& g)
         g.fillRect(tlRect);g.fillRect(trRect);g.fillRect(blRect);g.fillRect(brRect);
         g.fillRect(mlRect);g.fillRect(mrRect);g.fillRect(tmRect);g.fillRect(bmRect);
     }
-    
+
     g.setColour(Colours::white);
     if (isCollinearX && isCollinearY) {
         // draw nothing
@@ -162,7 +162,7 @@ void Multiselect::calcRelativeQuadCoords(Rectangle<double> area)
     quadrel[2] = Vec2((quad[2].x - x) * invW, (quad[2].y - y) * invH);
     quadrel[3] = Vec2((quad[3].x - x) * invW, (quad[3].y - y) * invH);
 }
- 
+
 void Multiselect::applyRelativeQuadCoords(Rectangle<double> area)
 {
     const double x = area.getX();

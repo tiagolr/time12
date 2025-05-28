@@ -21,6 +21,7 @@ enum CellShape {
 };
 
 enum SeqEditMode {
+    EditNone,
     EditMin,
     EditMax,
     EditTension,
@@ -50,6 +51,7 @@ public:
     std::vector<Cell> cells;
     SeqEditMode editMode = SeqEditMode::EditMax;
     CellShape selectedShape = CellShape::SLine;
+    bool editNoneEditsMax = true;
     int patternIdx = -1;
 
     Sequencer(TIME12AudioProcessor& p);
@@ -73,7 +75,9 @@ public:
     void clear();
     void build();
     std::vector<PPoint> buildSeg(Cell cell);
-    std::vector<Cell*> getCellsInRange(double minx, double maxx);
+    int getCellIndexAt(double x);
+    Rectangle<double> getSegBounds(int segidx);
+    std::vector<Cell*> getCellsInRange(double minx, double maxx, bool getOverlapping);
     int getCellIndex(double minx, double maxx);
     int addCell(double minx, double maxx);
     void clearSegment(double minx, double maxx, bool removeAll);

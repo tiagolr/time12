@@ -14,7 +14,7 @@ SequencerWidget::SequencerWidget(TIME12AudioProcessor& p) : audioProcessor(p)
 		button.setColour(TextButton::textColourOffId, color);
 		button.setBounds(col,row,60,25);
 		button.onClick = [this, mode]() {
-			audioProcessor.sequencer->editMode = audioProcessor.sequencer->editMode == mode ? EditMax : mode;
+			audioProcessor.sequencer->editMode = audioProcessor.sequencer->editMode == mode ? EditNone : mode;
 			updateButtonsState();
 		};
 	};
@@ -23,13 +23,10 @@ SequencerWidget::SequencerWidget(TIME12AudioProcessor& p) : audioProcessor(p)
 		addAndMakeVisible(button);
 		button.setBounds(col, row, w, h);
 		button.onClick = [this, shape]() {
-			audioProcessor.sequencer->selectedShape = audioProcessor.sequencer->selectedShape == shape ? SNone : shape;
+			audioProcessor.sequencer->selectedShape = shape;
 			audioProcessor.showPaintWidget = audioProcessor.sequencer->selectedShape == SPTool;
-			auto editMode = audioProcessor.sequencer->editMode;
-			if (editMode != EditMin && editMode != EditMax) {
-				audioProcessor.sequencer->editMode = EditMax;
-				updateButtonsState();
-			}
+			audioProcessor.sequencer->editMode = EditMax;
+			updateButtonsState();
 			audioProcessor.sendChangeMessage(); // refresh ui
 		};
 		button.setAlpha(0.f);
@@ -118,6 +115,8 @@ SequencerWidget::SequencerWidget(TIME12AudioProcessor& p) : audioProcessor(p)
 		audioProcessor.sequencer->clear();
 		audioProcessor.sequencer->createUndo(snap);
 		audioProcessor.sequencer->build();
+		audioProcessor.sequencer->editMode = EditMax;
+		updateButtonsState();
 	};
 
 	col -= 70;
@@ -130,6 +129,28 @@ SequencerWidget::SequencerWidget(TIME12AudioProcessor& p) : audioProcessor(p)
 		audioProcessor.toggleSequencerMode();
 	};
 
+	col -= 70;
+	addAndMakeVisible(linkStepBtn);
+	linkStepBtn.setTooltip("Link sequencer step size and grid size");
+	linkStepBtn.setBounds(col-25,row,25,25);
+	linkStepBtn.setAlpha(0.f);
+	linkStepBtn.onClick = [this] {
+		audioProcessor.linkSeqToGrid = !audioProcessor.linkSeqToGrid;
+		if (audioProcessor.linkSeqToGrid) {
+			MessageManager::callAsync([this] {
+				audioProcessor.params.getParameter("seqstep")
+					->setValueNotifyingHost(audioProcessor.params.getParameter("grid")->getValue());
+				});
+		}
+		updateButtonsState();
+		};
+
+	col -= 60;
+	stepSelector = std::make_unique<GridSelector>(audioProcessor, true);
+	addAndMakeVisible(*stepSelector);
+	stepSelector->setTooltip("Shift + Wheel on view to change step size");
+	stepSelector->setBounds(col, row, 50, 25);
+
 	updateButtonsState();
 }
 
@@ -140,6 +161,9 @@ void SequencerWidget::resized()
 	resetBtn.setBounds(col-60,row,60,25);
 	col -= 70;
 	applyBtn.setBounds(col-60,row,60,25);
+	col -= 70;
+	stepSelector->setBounds(stepSelector->getBounds().withRightX(applyBtn.getBounds().getX() - 10));
+	linkStepBtn.setBounds(linkStepBtn.getBounds().withRightX(stepSelector->getBounds().getX() - 10));
 
 	auto bounds = clearBtn.getBounds();
 	clearBtn.setBounds(bounds.withRightX(getWidth()));
@@ -252,6 +276,32 @@ void SequencerWidget::paint(Graphics& g)
 	g.fillEllipse(bounds);
 	g.fillEllipse(bounds.translated(0.f,-r*3.f));
 	g.fillEllipse(bounds.translated(0.f,r*3.f));
+
+	bool linkstep = audioProcessor.linkSeqToGrid;
+	g.setColour(Colour(COLOR_ACTIVE));
+	if (linkstep) {
+		g.fillRoundedRectangle(linkStepBtn.getBounds().toFloat(), 3.0f);
+		drawChain(g, linkStepBtn.getBounds(), Colour(COLOR_BG), Colour(COLOR_ACTIVE));
+	}
+	else {
+		drawChain(g, linkStepBtn.getBounds(), Colour(COLOR_ACTIVE), Colour(COLOR_BG));
+	}
+}
+
+void SequencerWidget::drawChain(Graphics& g, Rectangle<int> bounds, Colour color, Colour background)
+{
+	(void)background;
+	float x = bounds.toFloat().getCentreX();
+	float y = bounds.toFloat().getCentreY();
+	float rx = 10.f;
+	float ry = 5.f;
+
+	g.setColour(color);
+	Path p;
+	p.addRoundedRectangle(x-rx, y-ry/2, rx, ry, 2.0f, 2.f);
+	p.addRoundedRectangle(x, y-ry/2, rx, ry, 2.0f, 2.f);
+	p.applyTransform(AffineTransform::rotation(MathConstants<float>::pi / 4.f, x, y));
+	g.strokePath(p, PathStrokeType(2.f));
 }
 
 void SequencerWidget::mouseDown(const juce::MouseEvent& e) 

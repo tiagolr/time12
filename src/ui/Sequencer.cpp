@@ -156,7 +156,7 @@ void Sequencer::onMouseSegment(const MouseEvent& e, bool isDrag) {
         y = std::round(y * snapy) / snapy;
     }
 
-    bool canAddCell = (editMode == EditMax) && selectedShape != SNone;
+    bool canAddCell = editMode == EditMax && selectedShape != SNone;
     auto segCells = getCellsInRange(x1, x2);
 
     if (e.mods.isRightButtonDown()) {
@@ -220,8 +220,8 @@ void Sequencer::onMouseSegment(const MouseEvent& e, bool isDrag) {
         }
     }
     for (auto cell : segCells) {
-        if (cell->shape == SLine) {
-            cell->maxy = 1.0;
+        if (cell->shape == SLine || cell->shape == SRPoint || cell->shape == SLPoint) {
+            cell->miny = 1.0;
         }
         if (editMode == EditMin) {
             cell->miny = y;

@@ -128,7 +128,7 @@ void TIME12AudioProcessor::loadSettings ()
                 int type;
                 std::istringstream iss(str);
                 while (iss >> x >> y >> tension >> type) {
-                    paintPatterns[i]->insertPoint(x,y,tension,type);
+                    paintPatterns[i]->insertPoint(x,y,tension,type, false);
                 }
                 paintPatterns[i]->setTension(tensionparam, tensionatk, tensionrel, dualTension);
                 paintPatterns[i]->buildSegments();
@@ -1259,10 +1259,13 @@ void TIME12AudioProcessor::getStateInformation (juce::MemoryBlock& destData)
             << cell.lshape << ' '
             << cell.ptool << ' '
             << cell.invertx << ' '
+            << cell.minx << ' '
+            << cell.maxx << ' '
             << cell.miny << ' '
             << cell.maxy << ' '
             << cell.tenatt << ' '
-            << cell.tenrel << '\n';
+            << cell.tenrel << ' '
+            << cell.skew << '\n';
     }
     state.setProperty("seqcells", var(oss.str()), nullptr);
 
@@ -1314,7 +1317,7 @@ void TIME12AudioProcessor::setStateInformation (const void* data, int sizeInByte
                 int type;
                 std::istringstream iss(str);
                 while (iss >> x >> y >> tension >> type) {
-                    patterns[i]->insertPoint(x,y,tension,type);
+                    patterns[i]->insertPoint(x,y,tension,type, false);
                 }
             }
 
@@ -1332,7 +1335,9 @@ void TIME12AudioProcessor::setStateInformation (const void* data, int sizeInByte
             Cell cell;
             int shape, lshape;
             while (iss >> shape >> lshape >> cell.ptool >> cell.invertx 
-                >> cell.miny >> cell.maxy >> cell.tenatt >> cell.tenrel) {
+                >> cell.minx >> cell.maxx >> cell.miny >> cell.maxy >> cell.tenatt 
+                >> cell.skew >> cell.tenrel) 
+            {
                 cell.shape = static_cast<CellShape>(shape);
                 cell.lshape = static_cast<CellShape>(lshape);
                 sequencer->cells.push_back(cell);

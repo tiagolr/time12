@@ -128,6 +128,7 @@ After creating a sequence click `Apply` to save it as the current pattern and ed
 - `Alt + click` inserts new points.
 - `Alt + drag` selection handles skews selected points.
 - `Right click + drag` in paint mode changes paint tool tension.
+- `Shift + mouse wheel` changes sequencer step size.
 
 ## MacOS
 

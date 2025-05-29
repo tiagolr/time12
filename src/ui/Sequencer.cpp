@@ -404,6 +404,7 @@ void Sequencer::clearSegment(double minx, double maxx, bool removeAll)
 
 void Sequencer::open()
 {
+    isOpen = true;
     backup = audioProcessor.pattern->points;
     patternIdx = audioProcessor.pattern->index;
     build();
@@ -413,6 +414,7 @@ void Sequencer::open()
 
 void Sequencer::close()
 {
+    isOpen = false;
     if (audioProcessor.pattern->index != patternIdx)
         return;
 

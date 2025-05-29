@@ -48,6 +48,7 @@ struct Cell {
 
 class Sequencer {
 public:
+    bool isOpen = false;
     std::vector<Cell> cells;
     SeqEditMode editMode = SeqEditMode::EditMax;
     CellShape selectedShape = CellShape::SLine;

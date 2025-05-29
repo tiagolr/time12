@@ -57,6 +57,8 @@ TIME12AudioProcessor::TIME12AudioProcessor()
         param->addListener(this);
     }
 
+    params.addParameterListener("pattern", this);
+
     // init patterns
     for (int i = 0; i < 12; ++i) {
         patterns[i] = new Pattern(i);
@@ -94,6 +96,17 @@ TIME12AudioProcessor::TIME12AudioProcessor()
 
 TIME12AudioProcessor::~TIME12AudioProcessor()
 {
+    params.removeParameterListener("pattern", this);
+}
+
+void TIME12AudioProcessor::parameterChanged (const juce::String& parameterID, float newValue)
+{
+    if (parameterID == "pattern") {
+        int pat = (int)newValue;
+        if (pat != pattern->index + 1 && pat != queuedPattern) {
+            queuePattern(pat);
+        }
+    }
 }
 
 void TIME12AudioProcessor::parameterValueChanged (int parameterIndex, float newValue)
@@ -524,11 +537,6 @@ void TIME12AudioProcessor::onSlider()
 
     if (trigger != Trigger::Audio && audioTrigger)
         audioTrigger = false;
-
-    int pat = (int)params.getRawParameterValue("pattern")->load();
-    if (pat != pattern->index + 1 && pat != queuedPattern) {
-        queuePattern(pat);
-    }
 
     auto tension = (double)params.getRawParameterValue("tension")->load();
     auto tensionatk = (double)params.getRawParameterValue("tensionatk")->load();

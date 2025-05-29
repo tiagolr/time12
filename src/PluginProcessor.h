@@ -98,7 +98,11 @@ public:
 //==============================================================================
 /**
 */
-class TIME12AudioProcessor  : public AudioProcessor, public AudioProcessorParameter::Listener, public ChangeBroadcaster
+class TIME12AudioProcessor  
+    : public AudioProcessor
+    , public AudioProcessorParameter::Listener
+    , public ChangeBroadcaster
+    , private AudioProcessorValueTreeState::Listener
 {
 public:
     static constexpr int GRID_SIZES[] = {
@@ -212,6 +216,7 @@ public:
     //==============================================================================
     TIME12AudioProcessor();
     ~TIME12AudioProcessor() override;
+    void parameterChanged (const juce::String& parameterID, float newValue) override;
 
     void setAntiNoise(ANoise mode);
     void updateLatency(double sampleRate);

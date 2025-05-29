@@ -86,7 +86,7 @@ TIME12AudioProcessor::TIME12AudioProcessor()
     sequencer = new Sequencer(*this);
     pattern = patterns[0];
     viewPattern = pattern;
-    preSamples.resize(MAX_PLUG_WIDTH, 0); // samples array size must be >= viewport width 
+    preSamples.resize(MAX_PLUG_WIDTH, 0); // samples array size must be >= viewport width
     postSamples.resize(MAX_PLUG_WIDTH, 0);
     monSamples.resize(MAX_PLUG_WIDTH, 0); // samples array size must be >= audio monitor width
     value = new RCSmoother();
@@ -179,7 +179,7 @@ void TIME12AudioProcessor::setScale(float s)
 void TIME12AudioProcessor::resizeDelays(double srate, bool clear)
 {
     auto sync = (int)params.getRawParameterValue("sync")->load();
-    const int size = sync == 0 
+    const int size = sync == 0
         ? (int)(srate * 10)
         : (int)(syncQN * srate * 60 / tempo);
 
@@ -271,8 +271,8 @@ void TIME12AudioProcessor::setUIMode(UIMode mode)
 
 void TIME12AudioProcessor::togglePaintMode()
 {
-    setUIMode(uimode == UIMode::Paint 
-        ? UIMode::Normal 
+    setUIMode(uimode == UIMode::Paint
+        ? UIMode::Normal
         : UIMode::Paint
     );
 }
@@ -288,7 +288,7 @@ void TIME12AudioProcessor::togglePaintEditMode()
 void TIME12AudioProcessor::toggleSequencerMode()
 {
     setUIMode(uimode == UIMode::Seq
-        ? UIMode::Normal 
+        ? UIMode::Normal
         : UIMode::Seq
     );
 }
@@ -309,7 +309,7 @@ void TIME12AudioProcessor::setViewPattern(int index)
     sendChangeMessage();
 }
 
-void TIME12AudioProcessor::setPaintTool(int index) 
+void TIME12AudioProcessor::setPaintTool(int index)
 {
     paintTool = index;
     if (uimode == UIMode::PaintEdit) {
@@ -529,7 +529,7 @@ void TIME12AudioProcessor::onSlider()
         updateLatency(srate);
         ltrigger = trigger;
     }
-    if (trigger == Trigger::Sync && alwaysPlaying) 
+    if (trigger == Trigger::Sync && alwaysPlaying)
         alwaysPlaying = false; // force alwaysPlaying off when trigger is not MIDI or Audio
 
     if (trigger != Trigger::MIDI && midiTrigger)
@@ -700,7 +700,7 @@ double inline TIME12AudioProcessor::getY(double x, double min, double max)
     return min + (max - min) * pattern->get_y_at(x);
 }
 
-void TIME12AudioProcessor::setSmooth() 
+void TIME12AudioProcessor::setSmooth()
 {
     if (dualSmooth) {
         float attack = params.getRawParameterValue("attack")->load();
@@ -724,7 +724,7 @@ void TIME12AudioProcessor::queuePattern(int patidx)
 
     if (playing && patsync != PatSync::Off) {
         int interval = samplesPerBeat;
-        if (patsync == PatSync::QuarterBeat) 
+        if (patsync == PatSync::QuarterBeat)
             interval = interval / 4;
         else if (patsync == PatSync::HalfBeat)
             interval = interval / 2;
@@ -772,7 +772,7 @@ void TIME12AudioProcessor::processBlockByType (AudioBuffer<FloatType>& buffer, j
                 secondsPerBeat = 60.0 / *tempo_;
                 tempo = *tempo_;
 
-                if (ltempo != -1.0 && ltempo != tempo) { 
+                if (ltempo != -1.0 && ltempo != tempo) {
                     delayL.reserve((int)srate * 10); // tempo is changing, allocate memory so resizes become cheap
                     delayR.reserve((int)srate * 10);
                     resizeDelays(srate, false);
@@ -796,7 +796,7 @@ void TIME12AudioProcessor::processBlockByType (AudioBuffer<FloatType>& buffer, j
             bool stopToggle = playing && !play;
             playing = play;
 
-            if (playToggle) 
+            if (playToggle)
                 onPlay();
             else if (stopToggle)
                 onStop();
@@ -814,9 +814,9 @@ void TIME12AudioProcessor::processBlockByType (AudioBuffer<FloatType>& buffer, j
     int audioInputs = inputBusCount > 0 ? getChannelCountOfBus(true, 0) : 0;
     int sideInputs = inputBusCount > 1 ? getChannelCountOfBus(true, 1) : 0;
 
-    if (!audioInputs || !audioOutputs) 
+    if (!audioInputs || !audioOutputs)
         return;
-    
+
     double mix = (double)params.getRawParameterValue("mix")->load();
     int trigger = (int)params.getRawParameterValue("trigger")->load();
     int sync = (int)params.getRawParameterValue("sync")->load();
@@ -875,11 +875,11 @@ void TIME12AudioProcessor::processBlockByType (AudioBuffer<FloatType>& buffer, j
             if (anoise == ANLinear) {
                 outL = outL * (ansamps - xfade) / ansamps + delayL.read3(xfadepos + ansamps - xfade) * xfade / ansamps;
                 outR = outR * (ansamps - xfade) / ansamps + delayR.read3(xfadepos + ansamps - xfade) * xfade / ansamps;
-            } 
+            }
             else {
                 double fadeOut = 0.5 * (1.0 + std::cos(MathConstants<double>::pi * xfade / ansamps));
                 double fadeIn = 1.0 - fadeOut;
-        
+
                 outL = outL * fadeOut + delayL.read3(xfadepos + ansamps - xfade) * fadeIn;
                 outR = outR * fadeOut + delayR.read3(xfadepos + ansamps - xfade) * fadeIn;
             }
@@ -1038,14 +1038,14 @@ void TIME12AudioProcessor::processBlockByType (AudioBuffer<FloatType>& buffer, j
 
         // Sync mode
         if (trigger == Trigger::Sync) {
-            xpos = sync > 0 
+            xpos = sync > 0
                 ? beatPos / syncQN + phase
                 : ratePos + phase;
             xpos -= std::floor(xpos);
-            
+
             double newypos = getY(xpos, min, max);
             ypos = value->process(newypos, newypos > ypos);
-            
+
             double lsample = (double)buffer.getSample(0, sample);
             double rsample = (double)buffer.getSample(audioInputs > 1 ? 1 : 0, sample);
             processEnv(sample, ypos, lsample, rsample);
@@ -1074,11 +1074,11 @@ void TIME12AudioProcessor::processBlockByType (AudioBuffer<FloatType>& buffer, j
             }
 
             double newypos = getY(xpos, min, max);
-            ypos = value->process(newypos, newypos > ypos);    
+            ypos = value->process(newypos, newypos > ypos);
 
             double lsample = (double)buffer.getSample(0, sample);
             double rsample = (double)buffer.getSample(audioInputs > 1 ? 1 : 0, sample);
-            double viewpos = (alwaysPlaying || midiTrigger) ? xpos 
+            double viewpos = (alwaysPlaying || midiTrigger) ? xpos
                 : (trigpos + trigphase) - std::floor(trigpos + trigphase);
 
             processEnv(sample, ypos, lsample, rsample);
@@ -1116,8 +1116,8 @@ void TIME12AudioProcessor::processBlockByType (AudioBuffer<FloatType>& buffer, j
             latMonitorBufferL[writepos] = monSampleL;
             latMonitorBufferR[writepos] = monSampleR;
 
-            if (transDetectorL.detect(algo, monSampleL, threshold, sense) || 
-                transDetectorR.detect(algo, monSampleR, threshold, sense)) 
+            if (transDetectorL.detect(algo, monSampleL, threshold, sense) ||
+                transDetectorR.detect(algo, monSampleR, threshold, sense))
             {
                 transDetectorL.startCooldown();
                 transDetectorR.startCooldown();
@@ -1131,7 +1131,7 @@ void TIME12AudioProcessor::processBlockByType (AudioBuffer<FloatType>& buffer, j
             monSampleL = latMonitorBufferL[readpos];
             monSampleR = latMonitorBufferR[readpos];
             processMonitorSample(monSampleL, monSampleR, hit);
-           
+
             // envelope processing
             auto inc = sync > 0
                 ? beatsPerSample / syncQN
@@ -1181,7 +1181,7 @@ void TIME12AudioProcessor::processBlockByType (AudioBuffer<FloatType>& buffer, j
             }
 
             double newypos = getY(xpos, min, max);
-            ypos = value->process(newypos, newypos > ypos);    
+            ypos = value->process(newypos, newypos > ypos);
 
             if (useMonitor) {
                 for (int channel = 0; channel < audioOutputs; ++channel) {
@@ -1192,7 +1192,7 @@ void TIME12AudioProcessor::processBlockByType (AudioBuffer<FloatType>& buffer, j
                 processEnv(sample, ypos, lsample, rsample);
             }
 
-            auto viewpos = (alwaysPlaying || audioTrigger) ? xpos 
+            auto viewpos = (alwaysPlaying || audioTrigger) ? xpos
                 : (trigpos + trigphase) - std::floor(trigpos + trigphase);
             processDisplaySample(sample, viewpos, lsample, rsample);
 
@@ -1226,10 +1226,6 @@ juce::AudioProcessorEditor* TIME12AudioProcessor::createEditor()
 //==============================================================================
 void TIME12AudioProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
-    bool isSeqMode = uimode == UIMode::Seq;
-    if (isSeqMode)
-        sequencer->close();
-
     auto state = ValueTree("PluginState");
     state.appendChild(params.copyState(), nullptr);
     state.setProperty("version", PROJECT_VERSION, nullptr);
@@ -1256,6 +1252,11 @@ void TIME12AudioProcessor::getStateInformation (juce::MemoryBlock& destData)
     for (int i = 0; i < 12; ++i) {
         std::ostringstream oss;
         auto points = patterns[i]->points;
+
+        if (uimode == Seq && i == sequencer->patternIdx) {
+            points = sequencer->backup;
+        }
+
         for (const auto& point : points) {
             oss << point.x << " " << point.y << " " << point.tension << " " << point.type << " ";
         }
@@ -1281,9 +1282,6 @@ void TIME12AudioProcessor::getStateInformation (juce::MemoryBlock& destData)
 
     std::unique_ptr<juce::XmlElement> xml(state.createXml());
     copyXmlToBinary(*xml, destData);
-
-    if (isSeqMode) 
-        sequencer->open();
 }
 
 void TIME12AudioProcessor::setStateInformation (const void* data, int sizeInBytes)
@@ -1356,9 +1354,9 @@ void TIME12AudioProcessor::setStateInformation (const void* data, int sizeInByte
             std::istringstream iss(str);
             Cell cell;
             int shape, lshape;
-            while (iss >> shape >> lshape >> cell.ptool >> cell.invertx 
-                >> cell.minx >> cell.maxx >> cell.miny >> cell.maxy >> cell.tenatt 
-                >> cell.skew >> cell.tenrel) 
+            while (iss >> shape >> lshape >> cell.ptool >> cell.invertx
+                >> cell.minx >> cell.maxx >> cell.miny >> cell.maxy >> cell.tenatt
+                >> cell.skew >> cell.tenrel)
             {
                 cell.shape = static_cast<CellShape>(shape);
                 cell.lshape = static_cast<CellShape>(lshape);

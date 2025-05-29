@@ -53,6 +53,7 @@ public:
     CellShape selectedShape = CellShape::SLine;
     bool editNoneEditsMax = true;
     int patternIdx = -1;
+    std::vector<PPoint> backup;
 
     Sequencer(TIME12AudioProcessor& p);
     ~Sequencer() {}
@@ -107,7 +108,6 @@ private:
     std::vector<PPoint> rpoint;
     std::vector<PPoint> line;
 
-    std::vector<PPoint> backup;
     std::vector<Cell> snapshot;
     Pattern* pat;
     Pattern* tmp; // temp pattern used for painting

@@ -401,7 +401,7 @@ void TIME12AudioProcessor::setCurrentProgram (int index)
 
 void TIME12AudioProcessor::loadProgram (int index)
 {
-    if (uimode == UIMode::Seq)
+    if (sequencer->isOpen)
         sequencer->close();
 
     currentProgram = index;

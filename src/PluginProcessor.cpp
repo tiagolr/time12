@@ -1314,7 +1314,7 @@ void TIME12AudioProcessor::setStateInformation (const void* data, int sizeInByte
         outputATMIDI = (int)state.getProperty("outputATMIDI");
         paintTool = (int)state.getProperty("paintTool");
         paintPage = (int)state.getProperty("paintPage");
-        pointMode = state.hasProperty("pointMode") ? (int)state.getProperty("pointMode") : 1;
+        pointMode = state.hasProperty("pointMode") ? (int)state.getProperty("pointMode") : 0;
         audioIgnoreHitsWhilePlaying = (bool)state.getProperty("audioIgnoreHitsWhilePlaying");
         anoise = state.hasProperty("anoise") ? (ANoise)(int)state.getProperty("anoise") : anoise;
         linkSeqToGrid = state.hasProperty("linkSeqToGrid") ? (bool)state.getProperty("linkSeqToGrid") : true;

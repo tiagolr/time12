@@ -644,9 +644,9 @@ void TIME12AudioProcessor::restartEnv(bool fromZero)
             ? beatPos / syncQN + phase
             : ratePos + phase;
         xpos -= std::floor(xpos);
-    }
 
-    value->reset(getY(xpos, min, max)); // reset smooth
+        value->reset(getY(xpos, min, max)); // reset smooth
+    }
 }
 
 void TIME12AudioProcessor::onStop()

@@ -345,6 +345,16 @@ void TIME12AudioProcessor::toggleShowKnobs()
     MessageManager::callAsync([this]() { sendChangeMessage(); });
 }
 
+void TIME12AudioProcessor::startMidiTrigger()
+{
+    double phase = (double)params.getRawParameterValue("phase")->load();
+    clearDrawBuffers();
+    midiTrigger = !alwaysPlaying;
+    trigpos = 0.0;
+    trigphase = phase;
+    restartEnv(true);
+}
+
 //==============================================================================
 const juce::String TIME12AudioProcessor::getName() const
 {
@@ -955,7 +965,6 @@ void TIME12AudioProcessor::processBlockByType (AudioBuffer<FloatType>& buffer, j
             });
         }
     }
-    midiMessages.clear();
 
     // Process midi out queue
     for (auto it = midiOut.begin(); it != midiOut.end();) {
@@ -1004,12 +1013,13 @@ void TIME12AudioProcessor::processBlockByType (AudioBuffer<FloatType>& buffer, j
                         auto patidx = msg.note % 12;
                         queuePattern(patidx + 1);
                     }
-                    else if (trigger == Trigger::MIDI) {
-                        clearDrawBuffers();
-                        midiTrigger = !alwaysPlaying;
-                        trigpos = 0.0;
-                        trigphase = phase;
-                        restartEnv(true);
+                    if (trigger == Trigger::MIDI && (msg.channel == midiTriggerChn || midiTriggerChn == 16)) {
+                        if (queuedPattern) {
+                            queuedMidiTrigger = true;
+                        }
+                        else {
+                            startMidiTrigger();
+                        }
                     }
                 }
             }
@@ -1034,6 +1044,10 @@ void TIME12AudioProcessor::processBlockByType (AudioBuffer<FloatType>& buffer, j
                     sendChangeMessage();
                 });
                 queuedPattern = 0;
+                if (queuedMidiTrigger) {
+                    queuedMidiTrigger = false;
+                    startMidiTrigger();
+                }
             }
             if (queuedPatternCountdown > 0) {
                 queuedPatternCountdown -= 1;
@@ -1252,6 +1266,8 @@ void TIME12AudioProcessor::getStateInformation (juce::MemoryBlock& destData)
     state.setProperty("audioIgnoreHitsWhilePlaying", audioIgnoreHitsWhilePlaying, nullptr);
     state.setProperty("linkSeqToGrid", linkSeqToGrid, nullptr);
     state.setProperty("currpattern", pattern->index + 1, nullptr);
+    state.setProperty("midiTriggerChn", midiTriggerChn, nullptr);
+
 
     for (int i = 0; i < 12; ++i) {
         std::ostringstream oss;
@@ -1318,6 +1334,7 @@ void TIME12AudioProcessor::setStateInformation (const void* data, int sizeInByte
         audioIgnoreHitsWhilePlaying = (bool)state.getProperty("audioIgnoreHitsWhilePlaying");
         anoise = state.hasProperty("anoise") ? (ANoise)(int)state.getProperty("anoise") : anoise;
         linkSeqToGrid = state.hasProperty("linkSeqToGrid") ? (bool)state.getProperty("linkSeqToGrid") : true;
+        midiTriggerChn = (int)state.getProperty("midiTriggerChn");
 
         for (int i = 0; i < 12; ++i) {
             patterns[i]->clear();

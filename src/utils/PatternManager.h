@@ -18,7 +18,8 @@ class PatternManager
 {
 public:
     PatternManager() = default;
-    ~PatternManager() = default;    /**
+    ~PatternManager() = default;    
+    /**
      * Import patterns from a .12pat file
      * @param patterns Array of 12 Pattern pointers to import into
      * @param sequencer Pointer to the sequencer for UI mode handling

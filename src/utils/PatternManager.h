@@ -39,6 +39,7 @@ private:
     static constexpr const char* exportWindowTitle= "Export Patterns to a file";
     static constexpr const char* importWindowTitle = "Import Patterns from a file";
     std::unique_ptr<juce::FileChooser> mFileChooser;
+    juce::ScopedMessageBox messageBox;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PatternManager)
 };

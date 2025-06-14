@@ -138,9 +138,9 @@ MacOS builds are untested and unsigned, please let me know of any issues by open
 Because the builds are unsigned you may have to run the following commands:
 
 ```bash
-sudo xattr -dr com.apple.quarantine /path/to/your/plugins/time12.component
-sudo xattr -dr com.apple.quarantine /path/to/your/plugins/time12.vst3
-sudo xattr -dr com.apple.quarantine /path/to/your/plugins/time12.lv3
+sudo xattr -dr com.apple.quarantine /path/to/your/plugins/TIME-12.component
+sudo xattr -dr com.apple.quarantine /path/to/your/plugins/TIME-12.vst3
+sudo xattr -dr com.apple.quarantine /path/to/your/plugins/TIME-12.lv2
 ```
 
 The commands above will recursively remove the quarantine flag from the plugins.

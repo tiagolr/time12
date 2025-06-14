@@ -75,6 +75,11 @@ TIME12AudioProcessorEditor::TIME12AudioProcessorEditor (TIME12AudioProcessor& p)
     syncAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>(audioProcessor.params, "sync", syncMenu);
     col += 100;
 
+    rateDial = std::make_unique<TextDial>(p, "rate", "", "", TextDialLabel::tdRateHz, 16.f, 0xffffffff);
+    addAndMakeVisible(*rateDial);
+    rateDial->setBounds(col, row, 50, 25);
+    col += 60;
+
     addAndMakeVisible(triggerLabel);
     triggerLabel.setColour(juce::Label::ColourIds::textColourId, Colour(COLOR_NEUTRAL_LIGHT));
     triggerLabel.setFont(FontOptions(16.0f));
@@ -127,9 +132,9 @@ TIME12AudioProcessorEditor::TIME12AudioProcessorEditor (TIME12AudioProcessor& p)
     settingsButton->setBounds(col-15,row,25,25);
 
     col -= 25;
-    mixDial = std::make_unique<TextDial>(p, "mix", "Mix ", "", TextDialLabel::tdPercx100, 16.f, COLOR_NEUTRAL_LIGHT);
+    mixDial = std::make_unique<TextDial>(p, "mix", "Mix ", "", TextDialLabel::tdMix, 14.f, COLOR_NEUTRAL_LIGHT);
     addAndMakeVisible(*mixDial);
-    mixDial->setBounds(col - 65, row, 65, 25);
+    mixDial->setBounds(col - 30, row, 30, 25);
 
     // SECOND ROW
 
@@ -578,6 +583,15 @@ void TIME12AudioProcessorEditor::toggleUIComponents()
     int sync = (int)audioProcessor.params.getRawParameterValue("sync")->load();
     bool showAudioKnobs = audioProcessor.showAudioKnobs;
     bool showKnobs = audioProcessor.showKnobs;
+
+    rateDial->setVisible(sync == 0);
+    triggerLabel.setBounds(triggerLabel.getBounds().withX(rateDial->isVisible()
+        ? rateDial->getBounds().getRight() + 5
+        : syncMenu.getBounds().getRight() + 10
+    ));
+    triggerMenu.setBounds(triggerMenu.getBounds().withX(triggerLabel.getBounds().getRight() + 10));
+    algoMenu.setBounds(algoMenu.getBounds().withX(triggerMenu.getBounds().getRight() + 10));
+    audioSettingsButton.setBounds(audioSettingsButton.getBounds().withX(algoMenu.getBounds().getRight() + 10));
 
     // layout knobs
     rate->setVisible(!showAudioKnobs && showKnobs);

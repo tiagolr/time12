@@ -24,10 +24,21 @@ void TextDial::parameterChanged(const juce::String& parameterID, float newValue)
 void TextDial::paint(juce::Graphics& g) {
     g.fillAll(Colour(globals::COLOR_BG));
 
-    auto value = (int)(audioProcessor.params.getRawParameterValue(paramId)->load() * 100);
+    auto value = audioProcessor.params.getRawParameterValue(paramId)->load();
     g.setFont(fontSize);
     g.setColour(Colour(fontColor));
-    g.drawFittedText(prefix + String(value) + "%" + suffix, getLocalBounds(), Justification::centredLeft, 1);
+    if (format == tdRateHz) {
+        auto str = String(std::round(value)) + " Hz";
+        if (value < 10)
+            str = String(std::round(value * 100) / 100.f) + " Hz";
+        if (value > 1000) 
+            str = String(std::round(value / 100.f) / 10.f) + " kHz";
+        g.drawFittedText(str, getLocalBounds(), Justification::centredLeft, 1);
+    }
+    else if (format == tdMix) {
+        g.drawFittedText(prefix, getLocalBounds().removeFromTop(getLocalBounds().getHeight() / 2), Justification::centred, 1);
+        g.drawFittedText(String((int)value * 100) + "%", getLocalBounds().removeFromBottom(getLocalBounds().getHeight() / 2), Justification::centred, 1);
+    }
 }
 
 void TextDial::mouseDown(const juce::MouseEvent& e)
@@ -53,7 +64,7 @@ void TextDial::mouseUp(const juce::MouseEvent& e) {
 void TextDial::mouseDrag(const juce::MouseEvent& e) {
     auto change = e.getPosition() - last_mouse_position;
     last_mouse_position = e.getPosition();
-    auto speed = (e.mods.isShiftDown() ? 40.0f : 4.0f) * 200.0f;
+    auto speed = (e.mods.isShiftDown() ? 40.0f : 4.0f) * (format == tdRateHz ? 500.0f : 200.0f);
     auto slider_change = float(change.getX() - change.getY()) / speed;
     cur_normed_value += slider_change;
     cur_normed_value = jlimit(0.0f, 1.0f, cur_normed_value);

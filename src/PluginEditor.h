@@ -58,6 +58,7 @@ private:
     std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> patSyncAttachment;
     std::unique_ptr<SettingsButton> settingsButton;
     std::unique_ptr<TextDial> mixDial;
+    std::unique_ptr<TextDial> rateDial;
 
     std::unique_ptr<Rotary> rate;
     std::unique_ptr<Rotary> phase;

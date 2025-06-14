@@ -7,7 +7,8 @@ using namespace globals;
 class TIME12AudioProcessor;
 
 enum TextDialLabel {
-    tdPercx100,
+    tdMix,
+    tdRateHz
 };
 
 class TextDial : public juce::SettableTooltipClient, public juce::Component, private juce::AudioProcessorValueTreeState::Listener {

@@ -2,7 +2,7 @@
 #include "../PluginProcessor.h"
 #include "../Globals.h"
 
-void SettingsButton::paint(Graphics& g) 
+void SettingsButton::paint(Graphics& g)
 {
 	auto r = 1.5f;
 	auto bounds = getLocalBounds().expanded(-2,-4).toFloat();
@@ -205,8 +205,10 @@ void SettingsButton::mouseDown(const juce::MouseEvent& e)
 	load.addSubMenu("Complex", complex);
 	load.addSubMenu("Chaos", chaos);
 	load.addSeparator();
+	load.addItem(1001, "Import Pats");
+	load.addItem(1002, "Export Pats");
 	load.addSubMenu("Other", loadOther);
-	
+
 
 	PopupMenu menu;
 	auto menuPos = localPointToGlobal(getLocalBounds().getBottomRight());
@@ -221,9 +223,6 @@ void SettingsButton::mouseDown(const juce::MouseEvent& e)
 	menu.addItem(52, audioProcessor.uimode == UIMode::Seq ? "Reset" : "Clear");
 	menu.addSeparator();
 	menu.addSubMenu("Load", load);
-	menu.addItem(1001, "Import Pats");
-	menu.addItem(1002, "Export Pats");
-	menu.addSeparator();
 	menu.addItem(1000, "About");
 	menu.showMenuAsync(PopupMenu::Options()
 		.withTargetScreenArea({menuPos.getX() -110, menuPos.getY(), 1, 1}),
@@ -339,7 +338,7 @@ void SettingsButton::mouseDown(const juce::MouseEvent& e)
 				audioProcessor.outputATMIDI = result - 500;
 			}
 			// output options
-			else if (result == 700) { 
+			else if (result == 700) {
 				audioProcessor.outputCV = !audioProcessor.outputCV;
 			}
 			else if (result == 701) {

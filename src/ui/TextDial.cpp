@@ -37,7 +37,7 @@ void TextDial::paint(juce::Graphics& g) {
     }
     else if (format == tdMix) {
         g.drawFittedText(prefix, getLocalBounds().removeFromTop(getLocalBounds().getHeight() / 2), Justification::centred, 1);
-        g.drawFittedText(String((int)value * 100) + "%", getLocalBounds().removeFromBottom(getLocalBounds().getHeight() / 2), Justification::centred, 1);
+        g.drawFittedText(String((int)(value * 100)) + "%", getLocalBounds().removeFromBottom(getLocalBounds().getHeight() / 2), Justification::centred, 1);
     }
 }
 

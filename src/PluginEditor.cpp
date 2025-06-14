@@ -184,78 +184,9 @@ TIME12AudioProcessorEditor::TIME12AudioProcessorEditor (TIME12AudioProcessor& p)
 
     // SECOND ROW RIGHT
     col = getWidth() - PLUG_PADDING;
-    addAndMakeVisible(showKnobsButton);
-    showKnobsButton.setAlpha(0.0f);
-    showKnobsButton.setBounds(col - 25, row, 25, 25);
-    showKnobsButton.onClick = [this]() {
-        audioProcessor.toggleShowKnobs();
-    };
-
-    // KNOBS ROW
-    row += 35;
-    col = PLUG_PADDING;
-    rate = std::make_unique<Rotary>(p, "rate", "Rate", RotaryLabel::hz1f);
-    addAndMakeVisible(*rate);
-    rate->setBounds(col,row,80,65);
-    col += 75;
-
-    phase = std::make_unique<Rotary>(p, "phase", "Phase", RotaryLabel::percx100);
-    addAndMakeVisible(*phase);
-    phase->setBounds(col,row,80,65);
-    col += 75;
-
-    min = std::make_unique<Rotary>(p, "min", "Min", RotaryLabel::percx100);
-    addAndMakeVisible(*min);
-    min->setBounds(col,row,80,65);
-    col += 75;
-
-    max = std::make_unique<Rotary>(p, "max", "Max", RotaryLabel::percx100);
-    addAndMakeVisible(*max);
-    max->setBounds(col,row,80,65);
-    col += 75;
-
-    smooth = std::make_unique<Rotary>(p, "smooth", "Smooth", RotaryLabel::percx100);
-    addAndMakeVisible(*smooth);
-    smooth->setBounds(col,row,80,65);
-    col += 75;
-
-    attack = std::make_unique<Rotary>(p, "attack", "Attack", RotaryLabel::percx100);
-    addAndMakeVisible(*attack);
-    attack->setBounds(col,row,80,65);
-    col += 75;
-
-    release = std::make_unique<Rotary>(p, "release", "Release", RotaryLabel::percx100);
-    addAndMakeVisible(*release);
-    release->setBounds(col,row,80,65);
-    col += 75;
-
-    tension = std::make_unique<Rotary>(p, "tension", "Tension", RotaryLabel::percx100, true);
-    addAndMakeVisible(*tension);
-    tension->setBounds(col,row,80,65);
-    //col += 75;
-
-    tensionatk = std::make_unique<Rotary>(p, "tensionatk", "TAtk", RotaryLabel::percx100, true);
-    addAndMakeVisible(*tensionatk);
-    tensionatk->setBounds(col,row,80,65);
-    col += 75;
-
-    tensionrel = std::make_unique<Rotary>(p, "tensionrel", "TRel", RotaryLabel::percx100, true);
-    addAndMakeVisible(*tensionrel);
-    tensionrel->setBounds(col,row,80,65);
-    col += 75;
-
-    knobsRow.push_back(rate.get());
-    knobsRow.push_back(phase.get());
-    knobsRow.push_back(min.get());
-    knobsRow.push_back(max.get());
-    knobsRow.push_back(smooth.get());
-    knobsRow.push_back(attack.get());
-    knobsRow.push_back(release.get());
-    knobsRow.push_back(tension.get());
-    knobsRow.push_back(tensionatk.get());
-    knobsRow.push_back(tensionrel.get());
 
     // AUDIO KNOBS
+    row += 35;
     col = PLUG_PADDING;
 
     threshold = std::make_unique<Rotary>(p, "threshold", "Thres", RotaryLabel::gainTodB1f, false, true);
@@ -568,21 +499,15 @@ void TIME12AudioProcessorEditor::toggleUIComponents()
     triggerMenu.setColour(ComboBox::outlineColourId, Colour(triggerColor));
     algoMenu.setVisible(trigger == Trigger::Audio);
 
-    bool audioWasVisible = audioSettingsButton.isVisible();
     audioSettingsButton.setVisible(trigger == Trigger::Audio);
-
     if (!audioSettingsButton.isVisible()) {
         audioProcessor.showAudioKnobs = false;
-        if (audioWasVisible && audioProcessor.showKnobs) {
-            audioProcessor.toggleShowKnobs();
-        }
     }
 
     loopButton.setVisible(trigger > 0);
 
     int sync = (int)audioProcessor.params.getRawParameterValue("sync")->load();
     bool showAudioKnobs = audioProcessor.showAudioKnobs;
-    bool showKnobs = audioProcessor.showKnobs;
 
     rateDial->setVisible(sync == 0);
     triggerLabel.setBounds(triggerLabel.getBounds().withX(rateDial->isVisible()
@@ -593,68 +518,21 @@ void TIME12AudioProcessorEditor::toggleUIComponents()
     algoMenu.setBounds(algoMenu.getBounds().withX(triggerMenu.getBounds().getRight() + 10));
     audioSettingsButton.setBounds(audioSettingsButton.getBounds().withX(algoMenu.getBounds().getRight() + 10));
 
-    // layout knobs
-    rate->setVisible(!showAudioKnobs && showKnobs);
-    phase->setVisible(!showAudioKnobs && showKnobs);
-    min->setVisible(!showAudioKnobs && showKnobs);
-    max->setVisible(!showAudioKnobs && showKnobs);
-    smooth->setVisible(!showAudioKnobs && showKnobs);
-    attack->setVisible(!showAudioKnobs && showKnobs);
-    release->setVisible(!showAudioKnobs && showKnobs);
-    tension->setVisible(!showAudioKnobs && !audioProcessor.dualTension && showKnobs);
-    tensionatk->setVisible(!showAudioKnobs && audioProcessor.dualTension && showKnobs);
-    tensionrel->setVisible(!showAudioKnobs && audioProcessor.dualTension && showKnobs);
+    threshold->setVisible(showAudioKnobs);
+    sense->setVisible(showAudioKnobs);
+    lowcut->setVisible(showAudioKnobs);
+    highcut->setVisible(showAudioKnobs);
+    offset->setVisible(showAudioKnobs);
+    audioDisplay->setVisible(showAudioKnobs);
 
-    threshold->setVisible(showAudioKnobs && showKnobs);
-    sense->setVisible(showAudioKnobs && showKnobs);
-    lowcut->setVisible(showAudioKnobs && showKnobs);
-    highcut->setVisible(showAudioKnobs && showKnobs);
-    offset->setVisible(showAudioKnobs && showKnobs);
-    audioDisplay->setVisible(showAudioKnobs && showKnobs);
-
-    if (!showAudioKnobs && showKnobs) {
-        auto col = PLUG_PADDING;
-        auto row = PLUG_PADDING + 35 + 35;
-        rate->setVisible(sync == 0);
-        rate->setTopLeftPosition(col, row);
-        if (rate->isVisible())
-            col += 75;
-        phase->setTopLeftPosition(col, row);
-        col += 75;
-        min->setTopLeftPosition(col, row);
-        col += 75;
-        max->setTopLeftPosition(col, row);
-        col += 75;
-        if (audioProcessor.dualSmooth) {
-            smooth->setVisible(false);
-            attack->setVisible(true);
-            release->setVisible(true);
-            attack->setTopLeftPosition(col, row);
-            col += 75;
-            release->setTopLeftPosition(col, row);
-            col+= 75;
-        }
-        else {
-            smooth->setVisible(true);
-            attack->setVisible(false);
-            release->setVisible(false);
-            smooth->setTopLeftPosition(col, row);
-            col += 75;
-        }
-        tension->setTopLeftPosition(col, row);
-        tensionatk->setTopLeftPosition(col, row);
-        col += 75;
-        tensionrel->setTopLeftPosition(col, row);
-    }
-
-    useSidechain.setVisible(showAudioKnobs  && showKnobs);
-    useMonitor.setVisible(showAudioKnobs  && showKnobs);
+    useSidechain.setVisible(showAudioKnobs);
+    useMonitor.setVisible(showAudioKnobs);
     useSidechain.setToggleState(audioProcessor.useSidechain, dontSendNotification);
     useMonitor.setToggleState(audioProcessor.useMonitor, dontSendNotification);
 
     for (auto& comp : thirdRow) {
         auto bounds = comp.get().getBounds();
-        comp.get().setBounds(bounds.withY(showKnobs ? smooth.get()->getBounds().getBottom() + 10 : showKnobsButton.getBottom() + 10));
+        comp.get().setBounds(bounds.withY(showAudioKnobs ? threshold.get()->getBounds().getBottom() + 10 : patSyncMenu.getBottom() + 10));
     }
 
     paintWidget->setVisible(audioProcessor.showPaintWidget);
@@ -711,24 +589,6 @@ void TIME12AudioProcessorEditor::paint (Graphics& g)
     g.setColour(Colour(COLOR_NEUTRAL));
     g.drawEllipse(pointLabel.getBounds().expanded(-2,-2).toFloat(), 1.f);
     g.fillEllipse(pointLabel.getBounds().expanded(-10,-10).toFloat());
-
-    // controls button
-    g.setColour(Colour(COLOR_ACTIVE));
-    auto rx = 7.0f;
-    auto ry = 3.0f;
-    bounds = showKnobsButton.getBounds().toFloat();
-    Path cbtn;
-    if (audioProcessor.showKnobs) {
-        cbtn.startNewSubPath(bounds.getCentreX() - rx, bounds.getCentreY() + ry);
-        cbtn.lineTo(bounds.getCentreX(), bounds.getCentreY() - ry);
-        cbtn.lineTo(bounds.getCentreX() + rx, bounds.getCentreY() + ry);
-    }
-    else {
-        cbtn.startNewSubPath(bounds.getCentreX() - rx, bounds.getCentreY() - ry);
-        cbtn.lineTo(bounds.getCentreX(), bounds.getCentreY() + ry);
-        cbtn.lineTo(bounds.getCentreX() + rx, bounds.getCentreY() - ry);
-    }
-    g.strokePath(cbtn, PathStrokeType(2.f));
 
     // draw loop play button
     auto trigger = (int)audioProcessor.params.getRawParameterValue("trigger")->load();
@@ -873,9 +733,6 @@ void TIME12AudioProcessorEditor::resized()
     auto bounds = settingsButton->getBounds();
     settingsButton->setBounds(bounds.withX(col - bounds.getWidth()));
     mixDial->setBounds(mixDial->getBounds().withRightX(settingsButton->getBounds().getX() - 10));
-
-    // second row
-    showKnobsButton.setBounds(showKnobsButton.getBounds().withRightX(getWidth() - PLUG_PADDING));
 
     // knobs row
     bounds = audioDisplay->getBounds();

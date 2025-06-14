@@ -60,16 +60,6 @@ private:
     std::unique_ptr<TextDial> mixDial;
     std::unique_ptr<TextDial> rateDial;
 
-    std::unique_ptr<Rotary> rate;
-    std::unique_ptr<Rotary> phase;
-    std::unique_ptr<Rotary> min;
-    std::unique_ptr<Rotary> max;
-    std::unique_ptr<Rotary> smooth;
-    std::unique_ptr<Rotary> attack;
-    std::unique_ptr<Rotary> release;
-    std::unique_ptr<Rotary> tension;
-    std::unique_ptr<Rotary> tensionatk;
-    std::unique_ptr<Rotary> tensionrel;
     std::unique_ptr<Rotary> threshold;
     std::unique_ptr<Rotary> sense;
     std::unique_ptr<Rotary> lowcut;
@@ -102,9 +92,7 @@ private:
     std::unique_ptr<PaintToolWidget> paintWidget;
     std::unique_ptr<SequencerWidget> seqWidget;
     Label latencyWarning;
-    TextButton showKnobsButton;
 
-    std::vector<juce::Component*> knobsRow;
     std::vector<std::reference_wrapper<juce::Component>> thirdRow;
 
     TooltipWindow tooltipWindow;

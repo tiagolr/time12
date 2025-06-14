@@ -221,8 +221,8 @@ void SettingsButton::mouseDown(const juce::MouseEvent& e)
 	menu.addItem(52, audioProcessor.uimode == UIMode::Seq ? "Reset" : "Clear");
 	menu.addSeparator();
 	menu.addSubMenu("Load", load);
-	menu.addItem(1001, "Import Patterns");
-	menu.addItem(1002, "Export Patterns");
+	menu.addItem(1001, "Import Pats");
+	menu.addItem(1002, "Export Pats");
 	menu.addSeparator();
 	menu.addItem(1000, "About");
 	menu.showMenuAsync(PopupMenu::Options()
@@ -355,10 +355,14 @@ void SettingsButton::mouseDown(const juce::MouseEvent& e)
 				toggleAbout();
 			}
 			else if (result == 1001) {
-				audioProcessor.importPatterns();
+				MessageManager::callAsync([this] {
+					audioProcessor.importPatterns();
+				});
 			}
 			else if (result == 1002) {
-				audioProcessor.exportPatterns();
+				MessageManager::callAsync([this] {
+					audioProcessor.exportPatterns();
+				});
 			}
 		}
 	);

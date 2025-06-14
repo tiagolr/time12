@@ -25,15 +25,14 @@ public:
      * @param sequencer Pointer to the sequencer for UI mode handling
      * @param tensionParameters Struct holding the tension parameters
      */
-    void importPatterns(Pattern* patterns[12], 
-                       Sequencer* sequencer,const TensionParameters& tensionParameters);
+    void importPatterns(Pattern* patterns[12],const TensionParameters& tensionParameters);
 
     /**
      * Export patterns to a .12pat file
      * @param patterns Array of 12 Pattern pointers to export from
      * @param sequencer Pointer to the sequencer to handle backup data
      */
-    void exportPatterns(Pattern* patterns[12], Sequencer* sequencer);
+    void exportPatterns(Pattern* patterns[12]);
 
 private:
     static constexpr const char* patternExtension= "*.12pat";

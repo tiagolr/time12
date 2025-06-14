@@ -6,14 +6,13 @@
 #include <sstream>
 
 constexpr int PATTERN_COUNT{ 12 };
-void PatternManager::importPatterns(Pattern* patterns[PATTERN_COUNT],
-	Sequencer* sequencer, const TensionParameters& tensionParameters)
+void PatternManager::importPatterns(Pattern* patterns[PATTERN_COUNT],const TensionParameters& tensionParameters)
 {
 	mFileChooser.reset(new juce::FileChooser(importWindowTitle, juce::File(), patternExtension));
 
 	mFileChooser->launchAsync(juce::FileBrowserComponent::openMode |
 		juce::FileBrowserComponent::canSelectFiles,
-		[this, patterns, sequencer, tensionParameters](const juce::FileChooser& fc)
+		[this, patterns, tensionParameters](const juce::FileChooser& fc)
 		{
 			if (fc.getURLResults().size() > 0)
 			{
@@ -52,16 +51,14 @@ void PatternManager::importPatterns(Pattern* patterns[PATTERN_COUNT],
 		}, nullptr);
 }
 
-void PatternManager::exportPatterns(Pattern* patterns[PATTERN_COUNT], Sequencer* sequencer)
+void PatternManager::exportPatterns(Pattern* patterns[PATTERN_COUNT])
 {
 	mFileChooser.reset(new juce::FileChooser(exportWindowTitle, juce::File::getSpecialLocation(juce::File::commonDocumentsDirectory), patternExtension));
 
 	mFileChooser->launchAsync(juce::FileBrowserComponent::saveMode |
 		juce::FileBrowserComponent::canSelectFiles |
-		juce::FileBrowserComponent::warnAboutOverwriting, [this, patterns, sequencer](const juce::FileChooser& fc)
+		juce::FileBrowserComponent::warnAboutOverwriting, [this, patterns](const juce::FileChooser& fc)
 		{
-
-
 			auto file = fc.getResult();
 			if (file == juce::File{})
 				return;
@@ -70,11 +67,6 @@ void PatternManager::exportPatterns(Pattern* patterns[PATTERN_COUNT], Sequencer*
 			for (int i = 0; i < PATTERN_COUNT; ++i)
 			{
 				auto points = patterns[i]->points;
-
-				if (sequencer->isOpen && i == sequencer->patternIdx)
-				{
-					points = sequencer->backup;
-				}
 
 				for (const auto& point : points)
 				{

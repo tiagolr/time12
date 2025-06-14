@@ -1399,14 +1399,18 @@ void TIME12AudioProcessor::setStateInformation (const void* data, int sizeInByte
 
 void TIME12AudioProcessor::importPatterns() 
 {
-    patternManager.importPatterns(patterns, sequencer,getTensionParameters());
+    if (sequencer->isOpen)
+        sequencer->close();
+    patternManager.importPatterns(patterns,getTensionParameters());
     setUIMode(UIMode::Normal);
-    sendChangeMessage();
 }
 
 void TIME12AudioProcessor::exportPatterns()
 {
-    patternManager.exportPatterns(patterns, sequencer);
+    if (sequencer->isOpen)
+        sequencer->close();
+    patternManager.exportPatterns(patterns);
+    setUIMode(UIMode::Normal);
 }
 
 

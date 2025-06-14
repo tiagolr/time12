@@ -32,6 +32,7 @@ Also check other plugins from this collection:
 
 * [GATE-12](https://github.com/tiagolr/gate12) - An envelope generator for volume/gate control.
 * [FILT-R](https://github.com/tiagolr/filtr) - An envelope based filter modulator.
+* [REEV-R](https://github.com/tiagolr/reevr) - Convolution reverb with pre and post modulation.
 
 
 ## Whats new

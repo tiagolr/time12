@@ -19,6 +19,7 @@
 #include <deque>
 #include "Globals.h"
 #include "ui/Sequencer.h"
+#include "utils/PatternManager.h"
 
 using namespace globals;
 
@@ -46,6 +47,16 @@ enum Trigger {
     Sync,
     MIDI,
     Audio
+};
+
+struct TensionParameters {
+    double tension;
+    double tensionAtk;
+    double tensionRel;
+    bool dualTension;
+    
+    TensionParameters(double t = 0.0, double ta = 0.0, double tr = 0.0, bool dual = false) 
+        : tension(t), tensionAtk(ta), tensionRel(tr), dualTension(dual) {}
 };
 
 enum PatSync {
@@ -240,6 +251,9 @@ public:
     void restorePaintPatterns();
     void toggleShowKnobs();
     void startMidiTrigger();
+    void exportPatterns();
+    void importPatterns();
+    TensionParameters getTensionParameters();
 
     //==============================================================================
     void prepareToPlay (double sampleRate, int samplesPerBlock) override;
@@ -309,6 +323,7 @@ private:
     ApplicationProperties settings;
     std::vector<MidiInMsg> midiIn; // midi buffer used to process midi messages offset
     std::vector<MidiOutMsg> midiOut;
+    PatternManager patternManager;
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TIME12AudioProcessor)

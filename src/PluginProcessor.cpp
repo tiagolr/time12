@@ -355,6 +355,14 @@ void TIME12AudioProcessor::startMidiTrigger()
     restartEnv(true);
 }
 
+TensionParameters TIME12AudioProcessor::getTensionParameters()
+{
+
+    return TensionParameters((double)params.getRawParameterValue("tension")->load(),
+                             (double)params.getRawParameterValue("tensionatk")->load(),
+                             (double)params.getRawParameterValue("tensionrel")->load(), dualTension);
+}
+
 //==============================================================================
 const juce::String TIME12AudioProcessor::getName() const
 {
@@ -1388,6 +1396,19 @@ void TIME12AudioProcessor::setStateInformation (const void* data, int sizeInByte
     setAntiNoise(anoise);
     setUIMode(UIMode::Normal);
 }
+
+void TIME12AudioProcessor::importPatterns() 
+{
+    patternManager.importPatterns(patterns, sequencer,getTensionParameters());
+    setUIMode(UIMode::Normal);
+    sendChangeMessage();
+}
+
+void TIME12AudioProcessor::exportPatterns()
+{
+    patternManager.exportPatterns(patterns, sequencer);
+}
+
 
 //==============================================================================
 // This creates new instances of the plugin..

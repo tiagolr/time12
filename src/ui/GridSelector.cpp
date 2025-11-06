@@ -1,7 +1,7 @@
 #include "GridSelector.h"
 #include "../PluginProcessor.h"
 
-GridSelector::GridSelector(TIME12AudioProcessor& p, bool seqStepSelector) 
+GridSelector::GridSelector(TIME12AudioProcessor& p, bool seqStepSelector)
     : audioProcessor(p)
     , seqStepSelector(seqStepSelector)
 {
@@ -13,7 +13,7 @@ GridSelector::~GridSelector()
     audioProcessor.params.removeParameterListener(seqStepSelector ? "seqstep" : "grid", this);
 }
 
-void GridSelector::parameterChanged(const juce::String& parameterID, float newValue) 
+void GridSelector::parameterChanged(const juce::String& parameterID, float newValue)
 {
     auto seqstep = audioProcessor.params.getParameter("seqstep")->getValue();
     auto grid = audioProcessor.params.getParameter("grid")->getValue();
@@ -45,7 +45,7 @@ void GridSelector::paint(juce::Graphics& g) {
     g.drawFittedText((seqStepSelector ? "Step " : "Grid ") + String(gridSize), getLocalBounds(), Justification::centredLeft, 1);
 }
 
-void GridSelector::mouseDown(const juce::MouseEvent& e) 
+void GridSelector::mouseDown(const juce::MouseEvent& e)
 {
     (void)e;
     PopupMenu menu;
@@ -70,7 +70,7 @@ void GridSelector::mouseDown(const juce::MouseEvent& e)
             MessageManager::callAsync([this, result]() {
                 auto param = audioProcessor.params.getParameter(seqStepSelector ? "seqstep": "grid");
                 param->setValueNotifyingHost(param->convertTo0to1(result-1.f));
-                });
+            });
         }
     );
 

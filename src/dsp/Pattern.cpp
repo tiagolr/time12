@@ -378,7 +378,7 @@ double Pattern::get_y_half_sine(Segment seg, double x)
     auto rise = seg.y1 > seg.y2;
     auto tmult = dualTension ? (rise ? tensionAtk.load() : tensionRel.load()) : tensionMult.load();
     auto ten = seg.tension + (rise ? -tmult : tmult);
-    if (!rise) ten *= -1;
+    ten *= -1;
     if (ten > 1) ten = 1;
     if (ten < -1) ten = -1;
     auto pwr = pow(1.1, std::fabs(ten * 50.));

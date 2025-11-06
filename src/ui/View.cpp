@@ -274,7 +274,7 @@ void View::drawPreSelection(Graphics& g)
 std::vector<double> View::getMidpointXY(Segment seg)
 {
     double x = (std::max(seg.x1, 0.0) + std::min(seg.x2, 1.0)) * 0.5;
-    double y = seg.type > 1 && seg.x1 >= 0.0 && seg.x2 <= 1.0
+    double y = seg.type > 1 && seg.type != PointType::HalfSine && seg.x1 >= 0.0 && seg.x2 <= 1.0
         ? (seg.y1 + seg.y2) / 2
         : audioProcessor.viewPattern->get_y_at(x);
 
@@ -619,13 +619,13 @@ void View::mouseDrag(const juce::MouseEvent& e)
         if (idx < points.size() - 1) {
             auto nextidx = idx + 1;
             auto& next = points[nextidx];
-            if (point.x >= next.x && point.x - next.x < 15. / winw) 
+            if (point.x >= next.x && point.x - next.x < 20. / winw) 
                 point.x = next.x - 1e-8;
         }
         if (idx > 0) {
             auto previdx = idx - 1;
             auto& prev = points[previdx];
-            if (point.x <= prev.x && prev.x - point.x < 15. / winw) 
+            if (point.x <= prev.x && prev.x - point.x < 20. / winw) 
                 point.x = prev.x + 1e-8;
         }
 
@@ -686,7 +686,7 @@ void View::mouseDoubleClick(const juce::MouseEvent& e)
         hoverMidpoint = 0;
     }
     else if (!pt && mid) {
-        getPointFromSegmentIndex(getPointIndex(mid)).tension = 0;
+        getPointFromSegmentIndex(getPointIndex(mid) + 1).tension = 0;
     }
     else if (!pt && !mid) {
         insertNewPoint(e);
@@ -795,6 +795,7 @@ void View::showPointContextMenu(const juce::MouseEvent& event)
     menu.addItem(6, "Triangle", true, type == 5);
     menu.addItem(7, "Stairs", true, type == 6);
     menu.addItem(8, "Smooth stairs", true, type == 7);
+    menu.addItem(9, "Half Sine", true, type == 8);
     menu.showMenuAsync(PopupMenu::Options().withTargetComponent(this).withMousePosition(),[this, point](int result) {
         int type = audioProcessor.viewPattern->points[point].type;
         if (result > 0 && type != result - 1) {

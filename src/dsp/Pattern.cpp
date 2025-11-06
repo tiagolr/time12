@@ -28,6 +28,7 @@ void Pattern::incrementVersion()
 
 void Pattern::sortPoints()
 {
+    std::lock_guard<std::mutex> lock(pointsmtx);
     std::sort(points.begin(), points.end(), [](const PPoint& a, const PPoint& b) { 
         return a.x < b.x; 
     });
@@ -372,6 +373,29 @@ double Pattern::get_y_smooth_stairs(Segment seg, double x)
   return std::pow((x - xx) / (xx2 - xx), pwr) * (yy2 - yy) + yy;
 }
 
+double Pattern::get_y_half_sine(Segment seg, double x)
+{
+    auto rise = seg.y1 > seg.y2;
+    auto tmult = dualTension ? (rise ? tensionAtk.load() : tensionRel.load()) : tensionMult.load();
+    auto ten = seg.tension + (rise ? -tmult : tmult);
+    if (!rise) ten *= -1;
+    if (ten > 1) ten = 1;
+    if (ten < -1) ten = -1;
+    auto pwr = pow(1.1, std::fabs(ten * 50.));
+
+    if (seg.x1 == seg.x2)
+        return seg.y2;
+
+    double t = (x - seg.x1) / (seg.x2 - seg.x1);
+    t = 0.5 - 0.5 * std::cos(PI * t);
+
+    t = ten >= 0
+        ? std::pow(t, pwr)
+        : t = 1.0 - std::pow(1.0 - t, pwr);
+
+    return t * (seg.y2 - seg.y1) + seg.y1;
+}
+
 
 double Pattern::get_y_at(double x)
 {
@@ -397,6 +421,7 @@ double Pattern::get_y_at(double x)
             if (seg.type == PointType::Triangle) return get_y_triangle(seg, x);
             if (seg.type == PointType::Stairs) return get_y_stairs(seg, x);
             if (seg.type == PointType::SmoothSt) return get_y_smooth_stairs(seg, x);
+            if (seg.type == PointType::HalfSine) return get_y_half_sine(seg, x);
             return -1;
         }
     }

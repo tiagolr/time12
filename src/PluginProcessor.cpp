@@ -28,7 +28,7 @@ TIME12AudioProcessor::TIME12AudioProcessor()
         std::make_unique<juce::AudioParameterFloat>("tension", "Tension", -1.0f, 1.0f, 0.0f),
         std::make_unique<juce::AudioParameterFloat>("tensionatk", "Attack Tension", -1.0f, 1.0f, 0.0f),
         std::make_unique<juce::AudioParameterFloat>("tensionrel", "Release Tension", -1.0f, 1.0f, 0.0f),
-        std::make_unique<juce::AudioParameterBool>("snap", "Snap", false),
+        std::make_unique<juce::AudioParameterBool>("snap", "Snap", true),
         std::make_unique<juce::AudioParameterInt>("grid", "Grid", 0, (int)std::size(GRID_SIZES)-1, 2),
         std::make_unique<juce::AudioParameterChoice>("anoise", "Anti-Noise", StringArray { "Off", "Low", "Medium", "High"}, 2),
         std::make_unique<juce::AudioParameterInt>("seqstep", "Sequencer Step", 0, (int)std::size(GRID_SIZES)-1, 2),

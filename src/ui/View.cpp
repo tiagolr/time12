@@ -156,7 +156,7 @@ void View::drawGrid(Graphics& g)
 
     g.setColour(Colours::white.withAlpha(0.03f));
     Path tri;
-    tri.addTriangle({(float)winx, float(winy)}, 
+    tri.addTriangle({(float)winx, float(winy)},
         {(float)(winx + winw), float(winy)},
         {(float)(winx + winw), float(winy + winh)}
     );
@@ -250,7 +250,7 @@ void View::drawPoints(Graphics& g)
 
 void View::drawPreSelection(Graphics& g)
 {
-    if (preSelectionStart.x == -1 || (preSelectionStart.x == preSelectionEnd.x && preSelectionStart.y == preSelectionEnd.y)) 
+    if (preSelectionStart.x == -1 || (preSelectionStart.x == preSelectionEnd.x && preSelectionStart.y == preSelectionEnd.y))
         return;
 
     int x1 = std::clamp(preSelectionStart.x, 0, getWidth());
@@ -360,8 +360,8 @@ uint64_t View::getHoveredMidpoint(int x, int y)
     for (auto i = 0; i < segs.size(); ++i) {
         auto& seg = segs[i];
         auto xy = getMidpointXY(seg);
-        if (!isCollinear(seg) && seg.type != PointType::Hold && pointInRect(x, y, 
-            (int)xy[0] - MPOINT_HOVER_RADIUS, (int)xy[1] - MPOINT_HOVER_RADIUS, MPOINT_HOVER_RADIUS * 2, MPOINT_HOVER_RADIUS * 2)) 
+        if (!isCollinear(seg) && seg.type != PointType::Hold && pointInRect(x, y,
+            (int)xy[0] - MPOINT_HOVER_RADIUS, (int)xy[1] - MPOINT_HOVER_RADIUS, MPOINT_HOVER_RADIUS * 2, MPOINT_HOVER_RADIUS * 2))
         {
             return getPointFromSegmentIndex(i).id;
         }
@@ -416,7 +416,7 @@ void View::mouseDown(const juce::MouseEvent& e)
 
     // save snapshon, compare with changes after mouseup
     // if changes were made save this snapshot as undo
-    snapshot = audioProcessor.viewPattern->points; 
+    snapshot = audioProcessor.viewPattern->points;
     snapshotIdx = audioProcessor.viewPattern->index;
 
     Point pos = e.getPosition();
@@ -497,7 +497,7 @@ void View::mouseUp(const juce::MouseEvent& e)
             int y = (int)(audioProcessor.viewPattern->get_y_at((x - winx) / (double)winw) * winh + winy);
             Desktop::getInstance().setMousePosition(juce::Point<int>(x + getScreenPosition().x, y + getScreenPosition().y));
         }
-        else if (preSelectionStart.x > -1 && (std::abs(preSelectionStart.x - preSelectionEnd.x) > 4 || 
+        else if (preSelectionStart.x > -1 && (std::abs(preSelectionStart.x - preSelectionEnd.x) > 4 ||
             std::abs(preSelectionStart.y - preSelectionEnd.y) > 4))
         {
             multiSelect.makeSelection(e, preSelectionStart, preSelectionEnd);
@@ -619,17 +619,17 @@ void View::mouseDrag(const juce::MouseEvent& e)
         if (idx < points.size() - 1) {
             auto nextidx = idx + 1;
             auto& next = points[nextidx];
-            if (point.x >= next.x && point.x - next.x < 20. / winw) 
+            if (point.x >= next.x && point.x - next.x < 20. / winw)
                 point.x = next.x - 1e-8;
         }
         if (idx > 0) {
             auto previdx = idx - 1;
             auto& prev = points[previdx];
-            if (point.x <= prev.x && prev.x - point.x < 20. / winw) 
+            if (point.x <= prev.x && prev.x - point.x < 20. / winw)
                 point.x = prev.x + 1e-8;
         }
 
-        audioProcessor.viewPattern->sortPoints();
+        audioProcessor.viewPattern->sortPointsSafe();
         audioProcessor.viewPattern->buildSegments();
     }
 
@@ -776,7 +776,7 @@ void View::insertNewPoint(const MouseEvent& e)
     py = double(py - winy) / (double)winh;
     if (px >= 0 && px <= 1 && py >= 0 && py <= 1) { // point in env window
         audioProcessor.viewPattern->insertPoint(px, py, 0, audioProcessor.pointMode);
-        audioProcessor.viewPattern->sortPoints(); // keep things consistent, avoids reorders later
+        audioProcessor.viewPattern->sortPointsSafe(); // keep things consistent, avoids reorders later
     }
     audioProcessor.viewPattern->buildSegments();
 }

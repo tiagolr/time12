@@ -699,6 +699,8 @@ void TIME12AudioProcessor::clearLatencyBuffers()
     latBufferR.resize(latency, 0.0);
     latMonitorBufferL.resize(latency, 0.0);
     latMonitorBufferR.resize(latency, 0.0);
+    std::fill(latBufferL.begin(), latBufferL.end(), 0.0);
+    std::fill(latBufferR.begin(), latBufferR.end(), 0.0);
     std::fill(monSamples.begin(), monSamples.end(), 0.0);
     writepos = 0;
 }

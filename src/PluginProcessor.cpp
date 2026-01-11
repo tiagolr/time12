@@ -1008,7 +1008,8 @@ void TIME12AudioProcessor::processBlockByType (AudioBuffer<FloatType>& buffer, j
     }
 
     // keep beatPos in sync with playhead so plugin can be bypassed and return to its sync pos
-    if (playing) {
+    // some hosts (e.g. Ardour) quantize ppqPosition, so we ignore sub-millisecond adjustments
+    if (playing && std::abs(beatPos - ppqPosition) > 0.001) {
         beatPos = ppqPosition;
         ratePos = beatPos * secondsPerBeat * ratehz;
     }
